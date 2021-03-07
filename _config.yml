@@ -1,127 +1,53 @@
-# Site
-repository: sproogen/resume-theme
-favicon: images/favicon.ico
+# Welcome to Jekyll!
+#
+# This config file is meant for settings that affect your whole blog, values
+# which you are expected to set up once and rarely edit after that. If you find
+# yourself editing this file very often, consider using Jekyll's data files
+# feature for the data you need to update frequently.
+#
+# For technical reasons, this file is *NOT* reloaded automatically when you use
+# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
+#
+# If you need help with YAML syntax, here are some quick references for you:
+# https://learn-the-web.algonquindesign.ca/topics/markdown-yaml-cheat-sheet/#yaml
+# https://learnxinyminutes.com/docs/yaml/
+#
+# Site settings
+# These are used to personalize your new site. If you look in the HTML files,
+# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
+# You can create any custom variable you would like, and they will be accessible
+# in the templates via {{ site.myvariable }}.
 
-# Content configuration version
-version: 2
-
-# Personal info
-name: 김준호
-title: Java 백엔드 엔지니어
+title: 개발자 김준호의 깃헙 페이지
 email: junho85@gmail.com
-website: junho85.github.io
-
-# Dark Mode (true/false/never)
-darkmode: false
-
-# Social links
-# twitter_username: junho85
+description: >- # this means to ignore newlines until "baseurl:"
+  개발자 김준호의 깃헙 페이지입니다.
+baseurl: "/blog" # the subpath of your site, e.g. /blog
+url: "" # the base hostname & protocol for your site, e.g. http://example.com
+twitter_username: junho85
 github_username:  junho85
-# stackoverflow_username: "00000001"
-# dribbble_username: jekyll
-# facebook_username: junho85
-# flickr_username: jekyll
-# instagram_username: jameswgrant
-linkedin_username: junho85
-# xing_username: jekyll
-# pinterest_username: jekyll
-youtube_username: JunHoKim
-# googleplus_username: +jekyll
-# orcid_username: 0000-0000-0000-0000
-
-# Additional icon links
-additional_links:
-- title: junho85.pe.kr
-  icon: fas fa-globe
-  url: https://junho85.pe.kr
-# - title: another link
-#   icon: font awesome brand icon name (eg. fab fa-twitter) (https://fontawesome.com/icons?d=gallery&m=free)
-#   url: Link url (eg. https://google.com)
-
-# Google Analytics and Tag Manager
-# Using more than one of these may cause issues with reporting
-# gtm: "GTM-0000000"
-# gtag: "UA-00000000-0"
-google_analytics: "UA-8585222-14"
-
-# About Section
-# about_title: About Me
-about_profile_image: images/profile.jpg
-about_content: | # this will include new lines to allow paragraphs
-  안녕하세요. 김준호입니다. 서버개발자 입니다. <mark>하루 수억건</mark>의 메일을 주고 받는 다음메일 서비스의 개발/운영 경험이 있습니다. 현재는 My 구독 서비스 신규 개발에 참여 하여 서비스 론칭 후 서비스를 발전시켜 나가고 있습니다.
-
-  주 사용 기술은 <mark>Java</mark>와 <mark>Linux</mark>입니다.
-
-content:
-  - title: Projects # Title for the section
-    layout: list # Type of content section (list/text)
-    content:
-      - layout: top-middle
-        title: Super awesome project
-        link: github.com/sproogen
-        # link_text: Project Website
-        additional_links:
-          - title:  sproogen/modern-resume-theme
-            icon: fab fa-github
-            url: github.com/sproogen/modern-resume-theme
-          # - title:  Github page for project (eg. sproogen/modern-resume-theme)
-          #   icon: fab fa-github
-          #   url: Link to project (eg. sproogen.github.io/modern-resume-theme)
-        quote: >
-          This is probably one of the greatest apps ever created, if you don't agree you're probably wrong.
-        description: | # this will include new lines to allow paragraphs
-          I started this project as a way if learning <mark>React</mark> and it has since grown into a fully fledged app. I have learned many skills through this and been I'm very proud of having this in my portfolio. If you don't have a project as awesome as this I would advise you make one.
-
-  - title: Experience # Title for the section
-    layout: list # Type of content section (list/text)
-    content:
-      - layout: left
-        title: 카카오
-        link: kakao.com
-        # link_text: boringcompany.com
-        sub_title: 백엔드 개발자
-        caption: January 2012 - Present
-        quote: >
-          하루 1억건이 넘는 메일 처리
-        description: | # this will include new lines to allow paragraphs
-            메일 서비스, My 구독 서비스 개발/운영
-
-  - title: 학력 # Title for the section
-    layout: list # Type of content section (list/text)
-    content:
-      - layout: left
-        title: 경북대학교
-        caption: 2004 - 2012
-        sub_title: IT대학 컴퓨터 학부 학사
-        quote: >
-          Established in 1636, Harvard is the oldest higher education institution in the United States, and is widely regarded in terms of its influence, reputation, and academic pedigree as a leading university in not just the US but also the world.
-        description: | # this will include new lines to allow paragraphs
-          During my time at Harvard I learnt most of my key skills that have I have taken through my career such as teamwork and working to tight deadlines. I thouroughly enjoyed my time as university and learnt a lot about a healthy work life balance.
-
-          I spent a lot of my free time as a committee member of the *Harvard Mountaineering Club* taking on roles such as *Trip Secretary* and *Vice-President*.
-
-  - title: A Little More About Me
-    layout: text
-    content: | # this will include new lines to allow paragraphs
-      Alongside my interests in networks and software engineering some of my other interests and hobbies are:
-      - Rock climbing
-      - Gaming
-      - Knitting
-      - [Becoming a ninja](https://www.youtube.com/watch?v=vtg4o__aRMg)
-
-      Look at this cool image
-      ![Trees](/modern-resume-theme/images/landscape-trees.jpg "Trees")
-
-# Footer
-footer_show_references: true
-# references_title: References on request (Override references text)
 
 # Build settings
-remote_theme: sproogen/resume-theme
-
-sass:
-  sass_dir: _sass
-  style: compressed
-
+theme: minima
 plugins:
- - jekyll-seo-tag
+  - jekyll-feed
+
+# Exclude from processing.
+# The following items will not be processed, by default.
+# Any item listed under the `exclude:` key here will be automatically added to
+# the internal "default list".
+#
+# Excluded items can be processed by explicitly listing the directories or
+# their entries' file path in the `include:` list.
+#
+# exclude:
+#   - .sass-cache/
+#   - .jekyll-cache/
+#   - gemfiles/
+#   - Gemfile
+#   - Gemfile.lock
+#   - node_modules/
+#   - vendor/bundle/
+#   - vendor/cache/
+#   - vendor/gems/
+#   - vendor/ruby/
