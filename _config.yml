@@ -22,7 +22,7 @@ title: 개발자 김준호의 깃헙 페이지
 email: junho85@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   개발자 김준호의 깃헙 페이지입니다.
-baseurl: "/blog" # the subpath of your site, e.g. /blog
+baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: junho85
 github_username:  junho85
