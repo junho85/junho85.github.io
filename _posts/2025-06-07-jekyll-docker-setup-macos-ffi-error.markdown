@@ -2,7 +2,8 @@
 layout: post
 title:  "macOS에서 Jekyll 블로그 ffi 빌드 오류 해결하기 - Docker로 해결"
 date:   2025-06-07 12:00:00 +0900
-categories: jekyll docker ruby
+categories: [jekyll, docker, ruby]
+tags: [macos, ffi, error, github-pages]
 ---
 
 ## 문제 상황
