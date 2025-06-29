@@ -128,5 +128,3 @@ bundle exec jekyll build
 ## 마무리
 
 이제 Jekyll 프로젝트가 GitHub Pages와 동일한 Ruby 환경에서 실행됩니다. rbenv를 사용하면 프로젝트별로 다른 Ruby 버전을 쉽게 관리할 수 있어, 여러 프로젝트를 동시에 작업할 때 매우 유용합니다.
-
-경고 메시지들(Sass deprecation warnings)은 minima 테마가 아직 최신 Sass 문법으로 업데이트되지 않아서 발생하는 것으로, 기능에는 영향을 주지 않습니다.
