@@ -3,7 +3,10 @@ layout: post
 title: "Jekyll 프로젝트를 GitHub Pages Ruby 3.3.4로 업그레이드하기"
 date: 2025-06-29
 categories: jekyll ruby rbenv github-pages
+image: /assets/images/2025-06-29-jekyll-ruby-upgrade-github-pages.png
 ---
+
+![Jekyll Ruby 업그레이드]({{ page.image | relative_url }})
 
 앞서 Jekyll 빌드 시 bundler 버전 오류를 해결한 후, GitHub Pages가 사용하는 Ruby 버전과 동일하게 맞추기 위해 Ruby를 업그레이드하는 작업을 진행했습니다.
 
