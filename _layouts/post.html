@@ -12,6 +12,9 @@ layout: default
       </time>
       {%- if page.author -%}
         • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">{{ page.author }}</span></span>
+      {%- endif -%}
+      {%- if page.last_modified_at -%}
+        • <span>최종 수정: {{ page.last_modified_at | date: date_format }}</span>
       {%- endif -%}</p>
   </header>
 

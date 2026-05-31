@@ -2,6 +2,7 @@
 layout: post
 title: "cmux - AI 시대의 터미널, IDE가 필요 없어지는 날이 올까?"
 date: 2026-03-31
+last_modified_at: 2026-05-31
 tags: ["cmux", "terminal", "Claude Code", "Ghostty", "developer-tools", "productivity"]
 image: /assets/images/2026-03-31-cmux-overview.png
 ---
