@@ -75,23 +75,27 @@ cmux에는 WebKit 기반 브라우저가 내장되어 있습니다. 터미널을
 
 ![cmux 내장 브라우저](/assets/images/2026-03-31-cmux-browser.png)
 
-특히 인상적인 것은 브라우저 자동화 API입니다. CSS 셀렉터 대신 스냅샷 기반 요소 참조 시스템을 사용하는데, 각 요소에 `e1`, `e2`, `e3` 같은 간결한 참조 번호가 할당되어 AI 에이전트가 웹 페이지와 상호작용하기에 훨씬 안정적입니다.
+특히 인상적인 것은 브라우저 자동화 API입니다. `cmux browser open`으로 surface를 생성하고, 이후 모든 조작을 해당 surface ID에 대고 수행하는 구조입니다. CSS 셀렉터로 요소를 지정하며, `snapshot --interactive --compact`로 현재 페이지의 조작 가능한 요소를 텍스트로 확인할 수 있어 AI 에이전트가 웹 페이지와 상호작용하기에 훨씬 안정적입니다.
 
 ```bash
-# 내장 브라우저로 로컬 개발 서버 열기
-cmux browser navigate http://localhost:3000
+# 내장 브라우저로 로컬 개발 서버 열기 (surface ID가 출력됨)
+cmux browser open http://localhost:3000
+# OK surface=surface:2 pane=pane:1 placement=split
 
-# 스냅샷으로 페이지 요소 확인
-cmux browser snapshot --interactive
+# 페이지 로드 대기
+cmux browser surface:2 wait --load-state complete --timeout-ms 15000
 
-# 요소 참조 번호로 클릭
-cmux browser click e5
+# 스냅샷으로 조작 가능한 요소 확인
+cmux browser surface:2 snapshot --interactive --compact
+
+# CSS 선택자로 클릭
+cmux browser surface:2 click "button[type='submit']"
 
 # 폼에 텍스트 입력
-cmux browser fill e12 "검색어"
+cmux browser surface:2 fill "input[name='search']" --text "검색어"
 
 # 스크린샷 캡처
-cmux browser screenshot --path ./screenshot.png
+cmux browser surface:2 screenshot --out ./screenshot.png
 ```
 
 현재 Chrome에서 Claude in Chrome 확장 기능을 잘 활용하고 있는데, cmux용 브라우저 스킬을 만들어서 테스트해보니 잘 동작했습니다. 아직 발전 중인 기능이지만, 터미널 안에서 브라우저까지 제어할 수 있다는 점에서 잠재력이 큽니다. 좀 더 고도화되면 Chrome 확장보다 더 seamless한 경험을 제공할 수 있을 것으로 보입니다.
