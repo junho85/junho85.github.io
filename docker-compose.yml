@@ -4,7 +4,7 @@ services:
   jekyll:
     build: .
     ports:
-      - "4000:4000"
+      - "${CMUX_PORT:-4000}:4000"
       - "35729:35729"  # LiveReload port
     volumes:
       - .:/app
