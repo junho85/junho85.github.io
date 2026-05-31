@@ -4,3 +4,14 @@
 .highlight code {
   white-space: pre;
 }
+
+/* 홈 상단 광고 빈 여백 제거 */
+ins.adsbygoogle[data-ad-status="unfilled"] {
+  display: none !important;
+}
+
+ins.adsbygoogle {
+  display: block;
+  height: auto !important;
+  min-height: 0 !important;
+}
