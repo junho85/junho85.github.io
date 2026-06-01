@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Jekyll 블로그 테마를 minima에서 Chirpy로 교체하기"
+title: "Jekyll 블로그 테마를 minima에서 Chirpy로 교체했습니다"
 date: 2026-06-01
 tags: ["Jekyll", "Chirpy", "blog", "theme", "GitHub Pages"]
 image: /assets/images/2026-06-01-chirpy-theme-home.png
