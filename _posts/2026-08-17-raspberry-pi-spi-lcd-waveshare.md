@@ -58,29 +58,14 @@ vcgencmd get_throttled     # 0x0 이어야 정상
 
 `0x0`이 아니면 먼저 해결하세요. 저는 이 단계에서 **케이블 하나 때문에** 클록이 절반으로 묶여 있었습니다. 어댑터 정격이 충분해도 얇은 micro USB 케이블의 전압 강하만으로 저전압이 뜹니다.
 
-## 1. SPI 활성화
-
-```bash
-sudo raspi-config
-#   3 Interface Options → SPI → <Yes>
-```
-
-Interface Options 하위 번호(`I3`/`I4` 등)는 버전마다 밀리니 **번호가 아니라 `SPI` 라벨**을 보고 고르세요. CLI로도 됩니다.
-
-```bash
-sudo raspi-config nonint do_spi 0      # 0 이 enable
-```
-
-`config.txt`를 어차피 편집할 거라면 거기서 한 번에 하는 게 편합니다. 대개 주석 처리된 채 이미 들어있습니다.
-
-## 2. 오버레이 한 줄 추가
+## 1. config.txt 에 두 줄 추가
 
 ```bash
 sudo cp /boot/firmware/config.txt /boot/firmware/config.txt.bak    # 백업 권장
 sudo nano /boot/firmware/config.txt
 ```
 
-파일 맨 끝(`[all]` 섹션)에 넣습니다.
+파일 맨 끝(`[all]` 섹션)에 두 줄을 넣습니다. **이게 설정의 전부입니다.**
 
 ```
 dtparam=spi=on
@@ -89,6 +74,21 @@ dtoverlay=piscreen
 
 > 경로가 `/boot/config.txt`가 아니라 **`/boot/firmware/config.txt`** 입니다.
 {: .prompt-info }
+
+### SPI 활성화가 곧 첫 줄입니다
+
+`dtparam=spi=on`이 **SPI 활성화**입니다. `raspi-config`의 `3 Interface Options → SPI → <Yes>`가 하는 일이 정확히 이 줄을 넣는 것이라, **둘 중 하나만 하면 됩니다.** raspi-config 쪽이 편하면 이렇게 해도 결과는 같습니다.
+
+```bash
+sudo raspi-config
+#   3 Interface Options → SPI → <Yes>
+
+sudo raspi-config nonint do_spi 0      # CLI. 0 이 enable
+```
+
+Interface Options 하위 번호(`I3`/`I4` 등)는 버전마다 밀리니 **번호가 아니라 `SPI` 라벨**을 보고 고르세요. 참고로 구운 이미지의 `config.txt`에는 이 줄이 **`#dtparam=spi=on` 주석 상태로 이미 들어있어서**, `#`만 지워도 됩니다.
+
+### 오버레이는 왜 `piscreen` 인가
 
 `piscreen`은 OzzMaker PiScreen용 오버레이지만 **ILI9486 + 저항막 터치** 조합이 같아서 그대로 맞습니다. 핀 배치는 커널 소스에서 확인했습니다.
 
@@ -108,7 +108,7 @@ spi-max-frequency = <24000000>;               # 표시 CS0 24MHz / 터치 CS1 2M
 sudo reboot
 ```
 
-## 3. 동작 확인
+## 2. 동작 확인
 
 ```bash
 dmesg | grep -i ili9486
@@ -136,7 +136,7 @@ sudo sh -c "head -c 307200 /dev/urandom > /dev/fb0"
 > 오버레이를 적용하면 `/dev/spidev0.0`, `/dev/spidev0.1`이 **사라집니다.** 정상입니다 — raw SPI 장치를 드라이버가 인수한 것입니다.
 {: .prompt-info }
 
-## 4. 화면에 그리기 — `hello-fb.py`
+## 3. 화면에 그리기 — `hello-fb.py` {#draw}
 
 fbtft 프레임버퍼는 **16bpp RGB565**입니다. PIL로 그린 RGB 이미지를 그대로 쓰면 안 되고 변환이 필요합니다.
 
@@ -217,7 +217,7 @@ fc-list :lang=ko | head
 
 숫자가 실시간으로 바뀌는 자리에는 **고정폭 `NanumGothicCoding`** 을 쓰면 글자가 흔들리지 않습니다.
 
-## 5. 터치 읽기
+## 4. 터치 읽기 {#touch}
 
 `python3-evdev` 없이 `/dev/input/eventN`을 직접 읽는 방법입니다. 먼저 장치를 찾습니다.
 
@@ -300,7 +300,7 @@ dtoverlay=piscreen,invx,invy,swapxy     # 터치 좌표 반전·교환
 dtoverlay=piscreen,speed=16000000       # 화면이 깨지면 SPI 속도를 낮춘다
 ```
 
-## 6. 콘솔 or 그림 — 하나만 고르세요
+## 5. 콘솔 or 그림 — 하나만 고르세요
 
 부팅 메시지와 로그인 콘솔을 LCD로 보내려면 `/boot/firmware/cmdline.txt`(**반드시 한 줄**) 맨 뒤에 추가합니다.
 
@@ -530,7 +530,7 @@ dtoverlay=fbtft,spi0-0,ili9486,bgr,reset_pin=25,dc_pin=24,rotate=270,speed=16000
 
 프레임버퍼 번호는 **등록 순서로 정해지고**, vc4 KMS와 SPI 드라이버의 프로브 타이밍 경합에 따라 갈립니다. 증상이 고약한 이유는 **하드코딩한 스크립트가 에러 없이 조용히 실패**한다는 점입니다. 장치는 멀쩡한데 화면만 죽은 것처럼 보입니다.
 
-해법은 위 [4단계의 `find_fb()`](#4-화면에-그리기)입니다. 번호가 아니라 `/sys/class/graphics/fb*/name`의 드라이버 이름으로 찾고, 해상도도 `virtual_size`에서 읽으면 회전 설정을 바꿔도 안전합니다.
+해법은 위 [화면에 그리기 단계의 `find_fb()`](#draw)입니다. 번호가 아니라 `/sys/class/graphics/fb*/name`의 드라이버 이름으로 찾고, 해상도도 `virtual_size`에서 읽으면 회전 설정을 바꿔도 안전합니다.
 
 ## 함정 3. `ABS_PRESSURE`가 항상 0입니다 {#pitfall-3}
 
@@ -546,7 +546,7 @@ BTN_TOUCH=1  →  ABS_X  →  ABS_Y  →  ABS_PRESSURE=0  →  SYN_REPORT
 
 `BTN_TOUCH`로 바꿨는데도 안 잡혔습니다. 저항막 터치를 톡 누르면 접촉이 수십 ms뿐이고, 그동안 **`BTN_TOUCH=1`부터 `=0`까지가 한 배치에 함께** 도착합니다. 배치를 다 처리하면 상태는 항상 "뗀 상태"라, `pressed`만 검사하는 코드는 **아무리 눌러도 영원히 못 봅니다.**
 
-그래서 눌림 시작을 `tap_count`로 latch해서 소비합니다([5단계 코드](#5-터치-읽기)의 `take_tap()`).
+그래서 눌림 시작을 `tap_count`로 latch해서 소비합니다([터치 읽기 단계 코드](#touch)의 `take_tap()`).
 
 단계가 여러 개인 화면(예: 좌/우 보정)에서는 다음 단계로 넘어갈 때 **남은 latch를 비워야** 합니다. 안 그러면 한 번 누른 게 두 단계를 동시에 통과합니다.
 
