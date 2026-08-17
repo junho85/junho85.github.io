@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "라즈베리파이 3.5인치 SPI LCD 설정하기 - 터치 게임까지 30분"
+title: "라즈베리파이 3.5인치 SPI LCD 설정하기 - 오버레이 한 줄과 함정 다섯 개"
 date: 2026-08-17
 tags: ["RaspberryPi", "SPI", "LCD", "waveshare", "ILI9486", "framebuffer", "ADS7846", "touch", "maker"]
 image: /assets/images/2026-08-17-lcd-poop-dodge-play.jpg
