@@ -136,50 +136,77 @@ sudo sh -c "head -c 307200 /dev/urandom > /dev/fb0"
 > 오버레이를 적용하면 `/dev/spidev0.0`, `/dev/spidev0.1`이 **사라집니다.** 정상입니다 — raw SPI 장치를 드라이버가 인수한 것입니다.
 {: .prompt-info }
 
-## 4. 화면에 그리기
+## 4. 화면에 그리기 — `hello-fb.py`
 
 fbtft 프레임버퍼는 **16bpp RGB565**입니다. PIL로 그린 RGB 이미지를 그대로 쓰면 안 되고 변환이 필요합니다.
 
+먼저 의존성입니다. PIL과 numpy는 Raspberry Pi OS **desktop 이미지에 기본 포함**되어 있으니 대개 그냥 됩니다. Lite라면 설치하세요.
+
+```bash
+sudo apt install -y python3-pil python3-numpy fonts-nanum
+```
+
+`hello-fb.py`라는 이름으로 저장합니다.
+
 ```python
-import glob, os
+#!/usr/bin/env python3
+# hello-fb.py — SPI LCD 프레임버퍼에 한글 한 줄 띄우기
+import glob, os, sys
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+DRIVER = "fb_ili9486"
+FONT = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+
 # fb 번호는 부팅마다 바뀐다 → 드라이버 이름으로 찾는다
-def find_fb(driver="fb_ili9486"):
+def find_fb(driver=DRIVER):
     for path in sorted(glob.glob("/sys/class/graphics/fb*")):
         if open(f"{path}/name").read().strip() == driver:
             w, h = open(f"{path}/virtual_size").read().strip().split(",")
             return "/dev/" + os.path.basename(path), int(w), int(h)
-    raise SystemExit(f"{driver} 프레임버퍼 없음")
+    raise SystemExit(f"{driver} 프레임버퍼 없음 - dtoverlay 설정을 확인하라")
 
+text = sys.argv[1] if len(sys.argv) > 1 else "안녕 라즈베리파이"
 dev, W, H = find_fb()
+print(f"framebuffer: {dev}  {W}x{H}")
 
 img = Image.new("RGB", (W, H), (18, 18, 24))
 d = ImageDraw.Draw(img)
-# 한글은 DejaVu 에 글리프가 없다 → 나눔 사용
-font = ImageFont.truetype("/usr/share/fonts/truetype/nanum/NanumGothic.ttf", 28)
-d.text((20, 20), "안녕 라즈베리파이", font=font, fill=(255, 205, 70))
+d.text((24, 30), text, font=ImageFont.truetype(FONT, 30), fill=(255, 205, 70))
+d.text((24, H - 40), f"{dev}  {W}x{H}  RGB565",
+       font=ImageFont.truetype(FONT, 15), fill=(120, 125, 138))
 
-# RGB → RGB565 (little endian)
+# RGB → RGB565 (little endian) 변환이 핵심
 a = np.asarray(img, dtype=np.uint16)
 rgb565 = ((a[:, :, 0] >> 3) << 11) | ((a[:, :, 1] >> 2) << 5) | (a[:, :, 2] >> 3)
 with open(dev, "wb") as fb:
     fb.write(rgb565.astype("<u2").tobytes())
 ```
 
-PIL과 numpy는 Raspberry Pi OS **desktop 이미지에 기본 포함**되어 있습니다. Lite라면 설치합니다.
+실행합니다. 프레임버퍼가 `root:video` 소유라 `sudo`가 필요합니다.
 
 ```bash
-sudo apt install -y python3-pil python3-numpy fonts-nanum
+sudo python3 hello-fb.py
+# framebuffer: /dev/fb0  480x320
+
+sudo python3 hello-fb.py "아무 문장이나"     # 인자로 다른 문장도 가능
 ```
 
-### 한글이 네모(□)로 나올 때
+![hello-fb.py 실행 결과 - LCD에 한글 출력](/assets/images/2026-08-17-lcd-hello-hangul.jpg)
+_다른 라즈베리파이에서 그대로 실행한 결과_
 
-DejaVu 폰트에는 한글 글리프가 없습니다. 영문·숫자만 나오고 한글은 전부 네모가 됩니다.
+`sudo`를 매번 붙이기 싫으면 사용자를 `video` 그룹에 넣고 재로그인합니다.
 
-![DejaVu 폰트로 한글이 네모로 깨진 화면](/assets/images/2026-08-17-lcd-hangul-broken.jpg)
-_DejaVu 폰트 — 영문 `GAME OVER`와 숫자는 나오지만 한글이 전부 □_
+```bash
+sudo usermod -aG video $USER
+```
+
+> 이 파일은 [게임 저장소](https://github.com/junho85/rpi-poop-dodge)에도 `hello-fb.py`로 들어있습니다. 클론해서 바로 실행할 수 있습니다.
+{: .prompt-tip }
+
+### 한글 폰트는 나눔을 쓰세요
+
+**DejaVu 폰트에는 한글 글리프가 없습니다.** 위 예제에서 폰트만 DejaVu로 바꾸면 한글이 전부 네모(□)로 나옵니다([아래 게임 절의 비교 사진](#hangul-font) 참고).
 
 한국 로케일로 설치했다면 나눔이 이미 깔려 있습니다.
 
@@ -188,18 +215,7 @@ fc-list :lang=ko | head
 # /usr/share/fonts/truetype/nanum/NanumGothic.ttf: NanumGothic,나눔고딕
 ```
 
-폰트만 나눔으로 바꾸면 해결됩니다.
-
-![나눔 폰트로 한글이 정상 출력된 화면](/assets/images/2026-08-17-lcd-hangul-fixed.jpg)
-_NanumGothic 적용 후 — 3.5인치에서도 한글이 또렷하게 읽힌다_
-
-숫자가 실시간으로 바뀌는 HUD 자리에는 **고정폭 `NanumGothicCoding`** 을 쓰면 글자가 흔들리지 않습니다.
-
-프레임버퍼는 `root:video` 소유라 `sudo`로 실행하거나 사용자를 `video` 그룹에 넣습니다.
-
-```bash
-sudo usermod -aG video $USER
-```
+숫자가 실시간으로 바뀌는 자리에는 **고정폭 `NanumGothicCoding`** 을 쓰면 글자가 흔들리지 않습니다.
 
 ## 5. 터치 읽기
 
@@ -335,6 +351,18 @@ _손가락을 댄 x 위치로 캐릭터가 따라온다. 좌상단 점수, LV, �
 | 루프 | 순수 파이썬 `while` + `time.monotonic()` 기반 dt |
 
 의존성은 PIL과 numpy 둘뿐이고 둘 다 desktop 이미지에 이미 있습니다.
+
+### 한글이 네모로 나왔던 이유 {#hangul-font}
+
+게임 UI를 한글로 만들었더니 처음엔 이렇게 나왔습니다. 영문 `GAME OVER`와 숫자는 멀쩡한데 한글만 전부 네모입니다 — DejaVu 폰트에 한글 글리프가 없기 때문입니다.
+
+![DejaVu 폰트로 한글이 네모로 깨진 게임 오버 화면](/assets/images/2026-08-17-lcd-hangul-broken.jpg)
+_폰트 경로만 잘못 잡으면 이렇게 된다_
+
+폰트를 `NanumGothic`으로 바꾸기만 하면 해결됩니다.
+
+![나눔 폰트 적용 후 한글이 정상 출력된 게임 오버 화면](/assets/images/2026-08-17-lcd-hangul-fixed.jpg)
+_NanumGothic 적용 후 — 3.5인치에서도 한글이 또렷하게 읽힌다_
 
 ### 캐릭터가 찢어져 보이면 — tearing
 
