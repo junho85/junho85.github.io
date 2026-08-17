@@ -412,6 +412,76 @@ sudo python3 poop-dodge.py
 
 참고로 앱 쪽 fps는 40~57까지 나오는데, SPI 24MHz로 307KB 프레임을 초당 그만큼 보내는 건 대역폭상 불가능합니다. **앱의 `write()`는 커널 버퍼 복사로 끝나고** 실제 SPI 전송은 fbtft 워커가 자기 주기로 처리하기 때문입니다. 즉 **앱 fps는 화면 갱신률이 아닙니다** — 실제 상한은 드라이버의 `fps=33`입니다.
 
+## pygame 게임도 띄울 수 있습니다 {#pygame}
+
+**pygame 자체는 라즈베리파이에서 잘 됩니다.** 문제는 SPI LCD에 출력하는 것입니다. **SDL2에는 fbdev 백엔드가 없습니다** — SDL 1.2의 `fbcon` 드라이버가 SDL2로 오면서 빠졌고, 남은 건 x11 · wayland · kmsdrm · dummy 정도입니다. 우리 LCD는 `fbtft`가 만든 fbdev 장치라 kmsdrm으로도 못 잡습니다.
+
+그래서 **pygame에게는 그리기만 시키고, 완성된 화면을 우리가 프레임버퍼에 복사**하면 됩니다.
+
+```python
+import os
+os.environ["SDL_VIDEODRIVER"] = "dummy"   # 창을 만들지 않는다
+import numpy as np, pygame
+
+def push(surface, dev, W, H):
+    if surface.get_size() != (W, H):
+        surface = pygame.transform.smoothscale(surface, (W, H))
+    # ⚠️ surfarray 는 (W, H, 3) 축이라 transpose 가 필요하다
+    a = np.transpose(pygame.surfarray.array3d(surface), (1, 0, 2)).astype(np.uint16)
+    rgb565 = ((a[:, :, 0] >> 3) << 11) | ((a[:, :, 1] >> 2) << 5) | (a[:, :, 2] >> 3)
+    with open(dev, "wb") as fb:
+        fb.write(rgb565.astype("<u2").tobytes())
+```
+
+`pygame.display.flip()`을 후크해두면 **게임 코드를 한 줄도 고치지 않고** 이 복사가 자동으로 일어납니다.
+
+```python
+orig_flip = pygame.display.flip
+def flip():
+    orig_flip()
+    push(pygame.display.get_surface(), dev, W, H)
+pygame.display.flip = flip
+```
+
+### 실제로 해봤습니다 — 아이가 만든 게임
+
+아이가 윈도우에서 pygame으로 만든 러너 게임을 라즈베리파이 LCD에 올렸습니다. 조작은 아이가 아두이노로 만든 버튼 조종기입니다.
+
+<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;max-width:100%;border-radius:8px;margin:1.2rem 0;">
+  <iframe src="https://www.youtube.com/embed/zsrg_dtOCDw"
+    title="첫째가 만든 게임을 라즈베리파이에 올리고 아두이노로 만든 조종기로 조작하기"
+    loading="lazy" allowfullscreen
+    style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+</div>
+
+옮기면서 걸린 게 화면 말고도 두 개 더 있었습니다.
+
+**① 윈도우 포트명** — 코드에 `serial.Serial('COM4', 9600)`이 박혀 있었습니다. 리눅스에서는 `/dev/ttyACM0`(아두이노 UNO는 CDC ACM)입니다. `serial.Serial`을 감싸서 **`COM*`이면 `/dev/ttyACM*`를 자동으로 찾게** 했습니다.
+
+**② 없는 리소스** — PNG 파일이 아직 안 넘어온 상태였는데, `pygame.image.load`에서 바로 죽습니다. 이것도 감싸서 **없으면 자리표시 Surface**를 돌려주게 했습니다. 그림 없이도 일단 플레이가 되니 나머지를 먼저 검증할 수 있었습니다.
+
+그리고 **LCD 터치를 아두이노 버튼과 같은 입력으로** 주입했습니다. 게임이 `ser.in_waiting` / `ser.read()`만 쓰므로, 그 둘을 흉내내는 객체에서 터치 탭을 `'J'` 문자로 흘려보내면 됩니다. 조종기 없이도 화면만 만져서 플레이됩니다.
+
+이 런처는 저장소에 `pygame-on-lcd.py`로 넣어뒀습니다.
+
+```bash
+sudo python3 pygame-on-lcd.py your-game.py
+```
+
+> 게임 해상도가 LCD와 다르면 자동으로 스케일합니다. 이번 게임은 아이가 **480×320으로 만들어서** 스케일 없이 1:1로 나왔습니다.
+{: .prompt-tip }
+
+### 더 정석적인 길 — `piscreen,drm`
+
+`piscreen` 오버레이에는 **`drm` 파라미터**가 있습니다. FBTFT 대신 DRM/KMS 드라이버를 쓰는 옵션입니다.
+
+```
+dtoverlay=piscreen,drm
+```
+
+이러면 LCD가 `/dev/dri/cardN`으로 잡히고, **`SDL_VIDEODRIVER=kmsdrm`으로 pygame이 우회 없이 직접** 붙을 수 있습니다. ⚠️ 다만 제가 검증하지 않았습니다 — HDMI와 카드가 둘이 되니 어느 쪽을 쓸지 지정해야 하고, fbdev 경로(`/dev/fbN`)가 사라져서 이 글의 다른 스크립트들은 못 쓰게 될 수 있습니다.
+
 ---
 
 # 트러블슈팅 {#troubleshooting}
