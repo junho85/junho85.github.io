@@ -14,18 +14,27 @@ image: /assets/images/2026-08-17-lcd-poop-dodge-play.jpg
 
 ## 이것만 하면 됩니다
 
+**1)** `config.txt` 맨 끝에 두 줄을 추가합니다. 편집기를 열지 않고 이 명령을 그대로 붙여넣으면 됩니다.
+
 ```bash
-# 1) config.txt 에 두 줄
-sudo nano /boot/firmware/config.txt
-#   dtparam=spi=on
-#   dtoverlay=piscreen
+sudo tee -a /boot/firmware/config.txt <<'EOF'
+dtparam=spi=on
+dtoverlay=piscreen
+EOF
 
 sudo reboot
+```
 
-# 2) 확인 — 프레임버퍼 번호가 나오면 성공
+**2)** 재부팅 후 프레임버퍼 번호가 나오면 성공입니다.
+
+```bash
 grep -l fb_ili9486 /sys/class/graphics/fb*/name
+# /sys/class/graphics/fb0/name    ← 이 번호를 아래에서 쓴다
+```
 
-# 3) 화면에 노이즈 띄워보기 (위에서 확인한 번호로)
+**3)** 화면에 노이즈를 띄워 확인합니다. 위에서 확인한 번호(`fb0`)로 바꿔 쓰세요.
+
+```bash
 sudo sh -c "head -c 307200 /dev/urandom > /dev/fb0"
 ```
 
@@ -65,12 +74,15 @@ sudo cp /boot/firmware/config.txt /boot/firmware/config.txt.bak    # 백업 권�
 sudo nano /boot/firmware/config.txt
 ```
 
-파일 맨 끝(`[all]` 섹션)에 두 줄을 넣습니다. **이게 설정의 전부입니다.**
+파일 맨 끝(`[all]` 섹션)에 아래 두 줄을 넣고 저장합니다(`Ctrl+O` → `Enter` → `Ctrl+X`). **이게 설정의 전부입니다.**
 
 ```
 dtparam=spi=on
 dtoverlay=piscreen
 ```
+
+> ⚠️ **줄 앞에 `#`을 붙이면 안 됩니다.** `config.txt`에서 `#`은 주석이라, 붙이면 설정이 무시되고 **에러도 없이 아무 일도 일어나지 않습니다.** 위 두 줄을 그대로, `#` 없이 넣으세요.
+{: .prompt-warning }
 
 > 경로가 `/boot/config.txt`가 아니라 **`/boot/firmware/config.txt`** 입니다.
 {: .prompt-info }
@@ -86,7 +98,7 @@ sudo raspi-config
 sudo raspi-config nonint do_spi 0      # CLI. 0 이 enable
 ```
 
-Interface Options 하위 번호(`I3`/`I4` 등)는 버전마다 밀리니 **번호가 아니라 `SPI` 라벨**을 보고 고르세요. 참고로 구운 이미지의 `config.txt`에는 이 줄이 **`#dtparam=spi=on` 주석 상태로 이미 들어있어서**, `#`만 지워도 됩니다.
+Interface Options 하위 번호(`I3`/`I4` 등)는 버전마다 밀리니 **번호가 아니라 `SPI` 라벨**을 보고 고르세요. 참고로 구운 이미지의 `config.txt`에는 이 줄이 이미 **주석 상태**(`#dtparam=spi=on`)로 들어있는 경우가 많습니다. 그럴 때는 새로 추가하는 대신 **앞의 `#`만 지우면** 됩니다. 같은 줄이 두 번 있어도 값이 같으니 해는 없습니다.
 
 ### 오버레이는 왜 `piscreen` 인가
 
