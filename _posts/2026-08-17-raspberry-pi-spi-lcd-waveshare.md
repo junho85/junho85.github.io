@@ -3,7 +3,7 @@ layout: post
 title: "라즈베리파이 3.5인치 SPI LCD 설정하기 - 터치 게임까지 30분"
 date: 2026-08-17
 tags: ["RaspberryPi", "SPI", "LCD", "waveshare", "ILI9486", "framebuffer", "ADS7846", "touch", "maker"]
-image: /assets/images/2026-08-17-waveshare-35-lcd-board.jpg
+image: /assets/images/2026-08-17-lcd-poop-dodge-play.jpg
 ---
 
 집에 놀고 있던 라즈베리파이 3에 서랍에 있던 3.5인치 SPI LCD를 붙였습니다. 결론부터 말하면 **`config.txt`에 두 줄만 넣으면 됩니다.**
@@ -335,10 +335,7 @@ sudo systemctl daemon-reload && sudo systemctl enable --now lcd-status
 
 ## 결과 — 똥피하기 게임
 
-터치가 되니 게임을 만들었습니다. 떨어지는 똥을 터치로 좌우 이동해 피하는 게임입니다.
-
-![3.5인치 SPI LCD에서 돌아가는 똥피하기 게임](/assets/images/2026-08-17-lcd-poop-dodge-play.jpg)
-_손가락을 댄 x 위치로 캐릭터가 따라온다. 좌상단 점수, LV, 피한 개수, 우상단 목숨 3개_
+터치가 되니 게임을 만들었습니다. 떨어지는 똥을 터치로 좌우 이동해 피하는 게임입니다 — **맨 위 사진**이 그 화면입니다. 손가락을 댄 x 위치로 캐릭터가 따라오고, 좌상단에 점수·레벨·피한 개수, 우상단에 목숨 3개가 표시됩니다.
 
 ### pygame이 아닙니다
 
