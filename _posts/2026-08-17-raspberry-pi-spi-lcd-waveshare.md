@@ -18,12 +18,16 @@ image: /assets/images/2026-08-17-lcd-poop-dodge-play.jpg
 
 ```bash
 sudo tee -a /boot/firmware/config.txt <<'EOF'
+
+[all]
 dtparam=spi=on
 dtoverlay=piscreen
 EOF
 
 sudo reboot
 ```
+
+`[all]`을 같이 넣는 이유는 아래 [조건부 필터](#config-filter) 절에 있습니다. 안 넣으면 **파일 구조에 따라 무시될 수 있습니다.**
 
 **2)** 재부팅 후 프레임버퍼 번호가 나오면 성공입니다.
 
@@ -74,9 +78,10 @@ sudo cp /boot/firmware/config.txt /boot/firmware/config.txt.bak    # 백업 권�
 sudo nano /boot/firmware/config.txt
 ```
 
-파일 맨 끝(`[all]` 섹션)에 아래 두 줄을 넣고 저장합니다(`Ctrl+O` → `Enter` → `Ctrl+X`). **이게 설정의 전부입니다.**
+파일 맨 끝에 아래를 넣고 저장합니다(`Ctrl+O` → `Enter` → `Ctrl+X`). **이게 설정의 전부입니다.**
 
 ```
+[all]
 dtparam=spi=on
 dtoverlay=piscreen
 ```
@@ -86,6 +91,26 @@ dtoverlay=piscreen
 
 > 경로가 `/boot/config.txt`가 아니라 **`/boot/firmware/config.txt`** 입니다.
 {: .prompt-info }
+
+### `[all]` 은 왜 붙이나 — 조건부 필터 {#config-filter}
+
+`config.txt` 는 **조건부 필터**로 섹션이 갈립니다. `[all]` · `[pi5]` · `[cm4]` 같은 줄이 나오면 **그 이후는 해당 조건에만** 적용되고, `[all]` 은 필터를 해제합니다.
+
+라즈베리파이 OS 기본 `config.txt` 의 끝부분은 대개 이렇게 생겼습니다.
+
+```
+[cm4]
+otg_mode=1
+[cm5]
+dtoverlay=dwc2,dr_mode=host
+[pi5]
+dtoverlay=nospi10
+[all]            ← 여기서 필터가 풀린다
+```
+
+**마지막이 `[all]` 이면** 파일 끝에 그냥 덧붙여도 모든 모델에 적용됩니다. 하지만 **`[pi5]` 처럼 모델 한정 필터로 끝나는 파일이라면, 덧붙인 줄이 Pi 3 에서 통째로 무시됩니다 — 에러도 없이.** 그래서 `[all]` 을 함께 적어 리셋하는 게 안전합니다.
+
+참고로 `dtparam=spi=on` 을 파일 앞부분에 두는 건 관례일 뿐 **필수는 아닙니다.** 필터가 걸리지 않은 영역이면 위치는 상관없고, `dtparam` 과 `dtoverlay` 모두 같은 규칙을 따릅니다.
 
 ### SPI 활성화가 곧 첫 줄입니다
 
