@@ -6,21 +6,27 @@ tags: ["RaspberryPi", "SPI", "LCD", "waveshare", "ILI9486", "framebuffer", "ADS7
 image: /assets/images/2026-08-17-lcd-poop-dodge-play.jpg
 ---
 
-집에 놀고 있던 라즈베리파이 3에 서랍에 있던 3.5인치 SPI LCD를 붙였습니다. 결론부터 말하면 **`config.txt`에 두 줄만 넣으면 됩니다.**
+집에 놀고 있던 라즈베리파이 3에 서랍에 있던 3.5인치 SPI LCD를 붙였습니다. 결론부터 말하면 **`raspi-config` 에서 SPI 를 켜고, `config.txt` 에 오버레이 한 줄만 넣으면 됩니다.**
 
-다만 그 두 줄을 찾기까지 검색 결과가 하나도 안 통했습니다. **앞쪽에 바로 따라할 수 있는 설정 방법**을, 뒤쪽에 [제가 걸린 함정들](#troubleshooting)을 정리했습니다. 잘 되면 앞쪽만 보시면 됩니다.
+다만 그 한 줄을 찾기까지 검색 결과가 하나도 안 통했습니다. **앞쪽에 바로 따라할 수 있는 설정 방법**을, 뒤쪽에 [제가 걸린 함정들](#troubleshooting)을 정리했습니다. 잘 되면 앞쪽만 보시면 됩니다.
 
 ![Waveshare 3.5inch RPi LCD (A) V3](/assets/images/2026-08-17-waveshare-35-lcd-board.jpg)
 
 ## 이것만 하면 됩니다
 
-**1)** `config.txt` 맨 끝에 두 줄을 추가합니다. 편집기를 열지 않고 이 명령을 그대로 붙여넣으면 됩니다.
+**1)** SPI 를 켭니다. **메뉴로 하는 게 제일 쉽습니다.**
+
+```bash
+sudo raspi-config
+#   3 Interface Options → 목록에서 SPI → <Yes> → <Finish>
+```
+
+**2)** 오버레이 한 줄을 추가합니다. 이건 메뉴에 없어서 파일에 직접 넣습니다.
 
 ```bash
 sudo tee -a /boot/firmware/config.txt <<'EOF'
 
 [all]
-dtparam=spi=on
 dtoverlay=piscreen
 EOF
 
@@ -29,14 +35,14 @@ sudo reboot
 
 `[all]`을 같이 넣는 이유는 아래 [조건부 필터](#config-filter) 절에 있습니다. 안 넣으면 **파일 구조에 따라 무시될 수 있습니다.**
 
-**2)** 재부팅 후 프레임버퍼 번호가 나오면 성공입니다.
+**3)** 재부팅 후 프레임버퍼 번호가 나오면 성공입니다.
 
 ```bash
 grep -l fb_ili9486 /sys/class/graphics/fb*/name
 # /sys/class/graphics/fb0/name    ← 이 번호를 아래에서 쓴다
 ```
 
-**3)** 화면에 노이즈를 띄워 확인합니다. 위에서 확인한 번호(`fb0`)로 바꿔 쓰세요.
+**4)** 화면에 노이즈를 띄워 확인합니다. 위에서 확인한 번호(`fb0`)로 바꿔 쓰세요.
 
 ```bash
 sudo sh -c "head -c 307200 /dev/urandom > /dev/fb0"
@@ -71,22 +77,53 @@ vcgencmd get_throttled     # 0x0 이어야 정상
 
 `0x0`이 아니면 먼저 해결하세요. 저는 이 단계에서 **케이블 하나 때문에** 클록이 절반으로 묶여 있었습니다. 어댑터 정격이 충분해도 얇은 micro USB 케이블의 전압 강하만으로 저전압이 뜹니다.
 
-## 1. config.txt 에 두 줄 추가
+## 1. raspi-config 로 SPI 켜기
+
+파일을 편집하기 전에, **메뉴로 할 수 있는 건 메뉴로** 하는 게 편합니다.
+
+```bash
+sudo raspi-config
+```
+
+```
+3 Interface Options  →  목록에서 SPI  →  <Yes>  →  <Finish>
+```
+
+> ⚠️ 하위 항목 번호(`I3` / `I4` …)는 **버전마다 밀립니다.** 번호를 외우지 말고 **`SPI` 라는 글자**를 보고 고르세요.
+{: .prompt-warning }
+
+CLI 로 하고 싶으면 한 줄로도 됩니다. `0` 이 enable 입니다(셸 종료코드 관례).
+
+```bash
+sudo raspi-config nonint do_spi 0
+```
+
+**이게 실제로 하는 일**은 `config.txt` 에 `dtparam=spi=on` 한 줄을 넣는 것입니다. 메뉴가 대신 파일을 고쳐주는 것뿐이고, 그래서 직접 그 줄을 써넣어도 결과는 같습니다.
+
+## 2. 오버레이 한 줄 추가
+
+SPI 는 켰습니다. 남은 건 **"이 SPI 장치가 화면이다"** 라고 알려주는 한 줄인데, **이건 raspi-config 메뉴에 없습니다.** 파일에 직접 넣어야 합니다.
 
 ```bash
 sudo cp /boot/firmware/config.txt /boot/firmware/config.txt.bak    # 백업 권장
-sudo nano /boot/firmware/config.txt
-```
+sudo tee -a /boot/firmware/config.txt <<'EOF'
 
-파일 맨 끝에 아래를 넣고 저장합니다(`Ctrl+O` → `Enter` → `Ctrl+X`). **이게 설정의 전부입니다.**
-
-```
 [all]
-dtparam=spi=on
 dtoverlay=piscreen
+EOF
 ```
 
-> ⚠️ **줄 앞에 `#`을 붙이면 안 됩니다.** `config.txt`에서 `#`은 주석이라, 붙이면 설정이 무시되고 **에러도 없이 아무 일도 일어나지 않습니다.** 위 두 줄을 그대로, `#` 없이 넣으세요.
+들어갔는지 눈으로 확인하고 재부팅합니다.
+
+```bash
+tail -5 /boot/firmware/config.txt
+sudo reboot
+```
+
+> **편집기를 열지 않는 쪽을 권합니다.** `nano` 로 열어 방향키로 맨 아래까지 내려가 타이핑하다 실수하는 경우가 더 흔합니다. 위 명령은 붙여넣기 한 번으로 끝납니다.
+{: .prompt-tip }
+
+> ⚠️ **줄 앞에 `#`을 붙이면 안 됩니다.** `config.txt`에서 `#`은 주석이라, 붙이면 설정이 무시되고 **에러도 없이 아무 일도 일어나지 않습니다.**
 {: .prompt-warning }
 
 > 경로가 `/boot/config.txt`가 아니라 **`/boot/firmware/config.txt`** 입니다.
@@ -110,20 +147,7 @@ dtoverlay=nospi10
 
 **마지막이 `[all]` 이면** 파일 끝에 그냥 덧붙여도 모든 모델에 적용됩니다. 하지만 **`[pi5]` 처럼 모델 한정 필터로 끝나는 파일이라면, 덧붙인 줄이 Pi 3 에서 통째로 무시됩니다 — 에러도 없이.** 그래서 `[all]` 을 함께 적어 리셋하는 게 안전합니다.
 
-참고로 `dtparam=spi=on` 을 파일 앞부분에 두는 건 관례일 뿐 **필수는 아닙니다.** 필터가 걸리지 않은 영역이면 위치는 상관없고, `dtparam` 과 `dtoverlay` 모두 같은 규칙을 따릅니다.
-
-### SPI 활성화가 곧 첫 줄입니다
-
-`dtparam=spi=on`이 **SPI 활성화**입니다. `raspi-config`의 `3 Interface Options → SPI → <Yes>`가 하는 일이 정확히 이 줄을 넣는 것이라, **둘 중 하나만 하면 됩니다.** raspi-config 쪽이 편하면 이렇게 해도 결과는 같습니다.
-
-```bash
-sudo raspi-config
-#   3 Interface Options → SPI → <Yes>
-
-sudo raspi-config nonint do_spi 0      # CLI. 0 이 enable
-```
-
-Interface Options 하위 번호(`I3`/`I4` 등)는 버전마다 밀리니 **번호가 아니라 `SPI` 라벨**을 보고 고르세요. 참고로 구운 이미지의 `config.txt`에는 이 줄이 이미 **주석 상태**(`#dtparam=spi=on`)로 들어있는 경우가 많습니다. 그럴 때는 새로 추가하는 대신 **앞의 `#`만 지우면** 됩니다. 같은 줄이 두 번 있어도 값이 같으니 해는 없습니다.
+참고로 `raspi-config` 가 넣는 `dtparam=spi=on` 은 필터가 걸리지 않은 앞부분에 들어가므로 이 문제가 없습니다. 우리가 직접 덧붙이는 오버레이 줄만 신경 쓰면 됩니다.
 
 ### 오버레이는 왜 `piscreen` 인가
 
@@ -139,13 +163,7 @@ compatible  = "ilitek,ili9486";
 spi-max-frequency = <24000000>;               # 표시 CS0 24MHz / 터치 CS1 2MHz
 ```
 
-재부팅합니다.
-
-```bash
-sudo reboot
-```
-
-## 2. 동작 확인
+## 3. 동작 확인
 
 ```bash
 dmesg | grep -i ili9486
@@ -173,7 +191,7 @@ sudo sh -c "head -c 307200 /dev/urandom > /dev/fb0"
 > 오버레이를 적용하면 `/dev/spidev0.0`, `/dev/spidev0.1`이 **사라집니다.** 정상입니다 — raw SPI 장치를 드라이버가 인수한 것입니다.
 {: .prompt-info }
 
-## 3. 화면에 그리기 — `hello-fb.py` {#draw}
+## 4. 화면에 그리기 — `hello-fb.py` {#draw}
 
 fbtft 프레임버퍼는 **16bpp RGB565**입니다. PIL로 그린 RGB 이미지를 그대로 쓰면 안 되고 변환이 필요합니다.
 
@@ -254,7 +272,7 @@ fc-list :lang=ko | head
 
 숫자가 실시간으로 바뀌는 자리에는 **고정폭 `NanumGothicCoding`** 을 쓰면 글자가 흔들리지 않습니다.
 
-## 4. 터치 읽기 {#touch}
+## 5. 터치 읽기 {#touch}
 
 `python3-evdev` 없이 `/dev/input/eventN`을 직접 읽는 방법입니다. 먼저 장치를 찾습니다.
 
@@ -337,7 +355,7 @@ dtoverlay=piscreen,invx,invy,swapxy     # 터치 좌표 반전·교환
 dtoverlay=piscreen,speed=16000000       # 화면이 깨지면 SPI 속도를 낮춘다
 ```
 
-## 5. 콘솔 or 그림 — 하나만 고르세요
+## 6. 콘솔 or 그림 — 하나만 고르세요
 
 부팅 메시지와 로그인 콘솔을 LCD로 보내려면 `/boot/firmware/cmdline.txt`(**반드시 한 줄**) 맨 뒤에 추가합니다.
 
