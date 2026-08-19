@@ -42,7 +42,7 @@ grep -l fb_ili9486 /sys/class/graphics/fb*/name
 # /sys/class/graphics/fb0/name    ← 이 번호를 아래에서 쓴다
 ```
 
-**4)** 화면에 노이즈를 띄워 확인합니다. 위에서 확인한 번호(`fb0`)로 바꿔 쓰세요.
+**4)** 화면에 노이즈를 띄워 확인합니다. 위에서 확인한 번호(`fb0`)로 바꿔 쓰세요. 지지직 패턴이 뜨면 성공입니다([사진](#noise)).
 
 ```bash
 sudo sh -c "head -c 307200 /dev/urandom > /dev/fb0"
@@ -163,7 +163,7 @@ compatible  = "ilitek,ili9486";
 spi-max-frequency = <24000000>;               # 표시 CS0 24MHz / 터치 CS1 2MHz
 ```
 
-## 3. 동작 확인
+## 3. 동작 확인 {#noise}
 
 ```bash
 dmesg | grep -i ili9486
@@ -187,6 +187,9 @@ grep -l fb_ili9486 /sys/class/graphics/fb*/name
 # 307200 = 480 x 320 x 2바이트(RGB565)
 sudo sh -c "head -c 307200 /dev/urandom > /dev/fb0"
 ```
+
+![난수를 프레임버퍼에 써서 노이즈가 뜬 LCD 화면](/assets/images/2026-08-17-lcd-noise-test.jpg)
+_이게 뜨면 성공. 라이브러리도 그래픽 API도 거치지 않고 **파일에 바이트를 쓴 것뿐**이다_
 
 > 오버레이를 적용하면 `/dev/spidev0.0`, `/dev/spidev0.1`이 **사라집니다.** 정상입니다 — raw SPI 장치를 드라이버가 인수한 것입니다.
 {: .prompt-info }
