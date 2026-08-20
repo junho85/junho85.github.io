@@ -518,6 +518,44 @@ pygame.display.flip = flip
 
 그리고 **LCD 터치를 아두이노 버튼과 같은 입력으로** 주입했습니다. 게임이 `ser.in_waiting` / `ser.read()`만 쓰므로, 그 둘을 흉내내는 객체에서 터치 탭을 `'J'` 문자로 흘려보내면 됩니다. 조종기 없이도 화면만 만져서 플레이됩니다.
 
+### 조종기는 문자 하나만 보냅니다
+
+아이가 만든 조종기 쪽도 놀랄 만큼 단순합니다. **아두이노가 하는 일은 버튼을 읽어 문자 하나를 보내는 것**뿐입니다.
+
+```
+[버튼] → 아두이노 UNO → USB 시리얼 9600bps → 게임의 ser.read()
+                          'J' 한 글자
+```
+
+배선도 두 개뿐입니다. 버튼 한쪽 다리를 **D2**, 다른쪽을 **GND** 에 꽂습니다. `INPUT_PULLUP` 을 쓰면 **풀업 저항이 필요 없습니다** — 누르지 않으면 `HIGH`, 누르면 `GND` 로 떨어져 `LOW` 입니다.
+
+스케치에서 중요한 건 두 줄입니다.
+
+```cpp
+// 접점은 누르는 순간 수 ms 동안 값이 튄다(bouncing).
+// 그대로 읽으면 한 번 눌러도 여러 번 눌린 것으로 잡힌다.
+if (millis() - lastChangeMs >= DEBOUNCE_MS && reading != stableState) {
+  stableState = reading;
+  if (stableState == LOW) Serial.write('J');   // 누르는 순간에만
+}
+```
+
+**① 디바운스** 없이 읽으면 한 번 눌러도 여러 번 점프합니다. **② 누르는 순간(엣지)에만** 보내야 합니다 — 누르고 있는 동안 계속 보내면 게임에서 연타가 됩니다.
+
+Pi 쪽에서 확인은 이렇게 합니다.
+
+```bash
+ls /dev/ttyACM*        # UNO 는 CDC ACM 으로 잡힌다
+python3 -c "import serial; s=serial.Serial('/dev/ttyACM0',9600,timeout=5); print(s.read(4))"
+```
+
+버튼을 네 번 누르면 `b'JJJJ'` 가 나옵니다. 안 나오면 **Arduino IDE 의 시리얼 모니터를 닫았는지** 보세요 — 포트를 잡고 있으면 다른 프로그램이 못 읽습니다.
+
+> 스케치와 배선·트러블슈팅은 저장소의 [`arduino-controller/`](https://github.com/junho85/rpi-poop-dodge/tree/main/arduino-controller) 에 있습니다.
+{: .prompt-tip }
+
+재미있는 건 게임 입장에서 **조종기든 LCD 터치든 같은 입력**이라는 점입니다. 런처가 터치 탭을 같은 문자로 주입하니, 조종기가 없어도 화면을 만져서 플레이됩니다.
+
 이 런처는 저장소에 `pygame-on-lcd.py`로 넣어뒀습니다.
 
 ```bash
