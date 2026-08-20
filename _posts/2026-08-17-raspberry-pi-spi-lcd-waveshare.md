@@ -346,20 +346,20 @@ class Touch:
 
 ### 터치 좌표는 회전 때문에 안 맞습니다
 
-`rotate=270`으로 화면이 돌아가 있으니 터치 raw 좌표축(0~4095)과 화면축이 일치하지 않습니다. 문서를 찾는 대신 **좌/우를 한 번씩 눌러보게 해서 직접 알아내는** 보정을 넣는 게 확실합니다. 더 크게 변한 축이 화면 가로축이고, 두 값의 부호로 방향까지 정해집니다.
+`rotate=270`으로 화면이 돌아가 있으니 터치 raw 좌표축(0~4095)과 화면축이 일치하지 않습니다. 두 가지를 맞춰야 합니다.
 
-![터치 보정 화면](/assets/images/2026-08-17-waveshare-35-lcd-touch-calibration.jpg)
+**① 어느 축이 화면 가로축인가.** 이 패널은 `ABS_X` 였지만 패널·회전 설정에 따라 `ABS_Y` 일 수 있습니다. 그때는 오버레이 파라미터로 커널이 처리하게 하면 됩니다.
 
-```python
-raw = touch.raw_x if axis == "x" else touch.raw_y
-screen_x = min(max((raw - lo) / (hi - lo), 0.0), 1.0) * width
+```
+dtoverlay=piscreen,swapxy        # 축 교환
+dtoverlay=piscreen,invx,invy     # 좌표 반전
 ```
 
-제 경우 `axis=x, lo=774, hi=3400`이 나왔습니다(다른 이미지에서 다시 재보니 `782, 3286` — 거의 같습니다). 결과를 JSON으로 저장하면 다음 실행부터 건너뛸 수 있습니다. ⚠️ `sudo`로 실행하면 저장 위치가 **`/root`** 입니다.
+**② raw 값을 화면 픽셀로 어떻게 옮기나.** 이쪽이 진짜 문제입니다.
 
 #### 커널이 알려주는 범위는 믿을 수 없습니다
 
-"보정 없이 `ABS_X`의 min/max로 스케일하면 되지 않나" 싶은데, 물어보면 이렇게 옵니다.
+"`ABS_X`의 min/max로 그냥 스케일하면 되지 않나" 싶은데, 커널에 물어보면 이렇게 옵니다.
 
 ```
 ABS_X         min=0      max=4095
@@ -383,18 +383,28 @@ ABS_PRESSURE  min=0      max=255
 
 **합쳐서 약 15%가 죽습니다.** 캐릭터가 화면 끝에 닿지 않는데 에러는 없습니다.
 
-> ⚠️ 보정 로그의 `lo`/`hi`(예: `782`, `3286`)를 화면 양 끝의 raw로 착각하면 안 됩니다. 보정 타겟 박스는 폭이 **화면의 1/3**(160px)이라 그 안 어디를 눌렀는지에 따라 값이 달라집니다. 위 `782`는 화면 x≈70 지점이었습니다. **실제 유효 범위는 물리 가장자리를 눌러야 나옵니다.**
-{: .prompt-warning }
+#### 그래서 관측하면서 넓힙니다
 
-보정은 이 절대 범위를 재는 게 아니라 **조작 범위를 잡는 것**입니다. 박스를 누른 지점이 화면 끝으로 매핑되니, 박스 근처만 눌러도 캐릭터가 끝까지 갑니다. 게임에서는 이게 더 편합니다.
+실측값을 기본으로 두고, **그보다 넓은 raw가 들어오면 그때그때 넓힙니다.** 보정 절차도, 저장 파일도 필요 없습니다.
 
-오버레이 파라미터로 조정하는 방법도 있습니다.
+```python
+RAW_LO, RAW_HI = 281, 3742      # 이 패널 실측값
 
+# ABS_X 를 받을 때마다
+if value < self.lo:
+    self.lo = value
+elif value > self.hi:
+    self.hi = value
+
+# 화면 좌표로
+span = self.hi - self.lo
+screen_x = min(max((self.raw_x - self.lo) / span, 0.0), 1.0) * width
 ```
-dtoverlay=piscreen,rotate=90            # 화면 방향 (0/90/180/270)
-dtoverlay=piscreen,invx,invy,swapxy     # 터치 좌표 반전·교환
-dtoverlay=piscreen,speed=16000000       # 화면이 깨지면 SPI 속도를 낮춘다
-```
+
+다른 패널에서도 몇 번 누르면 맞아지고, 처음 몇 번만 조금 좁게 잡힙니다. 게임에서는 그 차이가 체감되지 않습니다.
+
+> 처음에는 **첫 실행 때 좌/우를 눌러보게 하는 보정 화면**을 만들었습니다. 없앴습니다. 실습에서 매번 두 번 눌러야 하는 게 번거로웠고, 무엇보다 **그 두 점이 화면 양 끝이 아니라서** 정확한 범위도 아니었습니다(타겟 박스가 화면 1/3 폭이라 그 안 어디를 눌렀는지에 따라 값이 달라집니다). 관측값을 누적하는 쪽이 코드도 짧고 결과도 낫습니다.
+{: .prompt-info }
 
 ## 6. 콘솔 or 그림 — 하나만 고르세요
 
@@ -589,6 +599,55 @@ python3 -c "import serial; s=serial.Serial('/dev/ttyACM0',9600,timeout=5); print
 
 버튼을 네 번 누르면 `b'JJJJ'` 가 나옵니다. 안 나오면 **Arduino IDE 의 시리얼 모니터를 닫았는지** 보세요 — 포트를 잡고 있으면 다른 프로그램이 못 읽습니다.
 
+#### 버튼 두 개로 늘리면 — 뗄 때도 보내야 합니다
+
+똥피하기는 좌우로 움직이는 게임이라 버튼이 두 개 필요합니다. 그런데 **누르는 순간만 보내면 게임이 언제 멈춰야 할지 모릅니다.** 그래서 뗄 때도 보냅니다.
+
+| 버튼 | 누를 때 | 뗄 때 |
+|---|---|---|
+| 왼쪽 (D2) | `L` | `l` |
+| 오른쪽 (D3) | `R` | `r` |
+
+버튼을 배열로 두면 늘리기도 쉽습니다.
+
+```cpp
+struct Button {
+  const uint8_t pin;
+  const char press;             // 누를 때 보낼 문자
+  const char release;           // 뗄 때 보낼 문자 (0 = 보내지 않음)
+  int lastReading, stableState;
+  unsigned long lastChangeMs;
+};
+
+Button buttons[] = {
+  {2, 'L', 'l', HIGH, HIGH, 0},
+  {3, 'R', 'r', HIGH, HIGH, 0},
+};
+```
+
+실제로 재보니 한 번 누름에 문자 하나씩 정확히 왔습니다.
+
+```
+받음: 'L' → 'l' → 'R' → 'r' ...
+총 'LlRrLlRrLlRrLlRrLlRrLl'
+```
+
+만들면서 걸린 것 세 가지를 적어둡니다.
+
+**① `.ino` 파일명은 폴더명과 같아야 합니다.** 다르면 Arduino IDE가 "폴더를 만들어 옮기겠냐"고 묻고, `arduino-cli`는 이렇게 거절합니다.
+
+```
+Can't open sketch: main file missing from sketch: .../arduino-controller.ino
+```
+
+**② 부팅 배너를 넣으면 진단이 빨라집니다.** 꽂자마자 문자가 오면 업로드·통신·보드레이트가 한 번에 확인되고, 남는 변수는 배선 하나뿐입니다. 단 **배너에 프로토콜 문자(`L l R r`)를 쓰면 안 됩니다** — 게임이 입력으로 오해합니다.
+
+```cpp
+Serial.write("# btn2 ok\n");
+```
+
+**③ 아두이노를 Pi에 꽂는 순간 Pi가 재부팅했습니다.** 꽂을 때의 순간 전류 때문입니다. 붙은 뒤에는 `throttled=0x0` 으로 안정적이었으니, **아두이노를 먼저 꽂고 Pi 전원을 넣으면** 됩니다.
+
 > 스케치와 배선·트러블슈팅은 저장소의 [`arduino-controller/`](https://github.com/junho85/rpi-poop-dodge/tree/main/arduino-controller) 에 있습니다.
 {: .prompt-tip }
 
@@ -714,7 +773,19 @@ BTN_TOUCH=1  →  ABS_X  →  ABS_Y  →  ABS_PRESSURE  →  SYN_REPORT
 
 그래서 눌림 시작을 `tap_count`로 latch해서 소비합니다([터치 읽기 단계 코드](#touch)의 `take_tap()`).
 
-단계가 여러 개인 화면(예: 좌/우 보정)에서는 다음 단계로 넘어갈 때 **남은 latch를 비워야** 합니다. 안 그러면 한 번 누른 게 두 단계를 동시에 통과합니다.
+**latch는 반드시 소비해야 합니다.** 안 비우면 `contact()`가 영구히 True로 남습니다. 저는 이걸 안 하다가 실제로 물렸습니다 — 아두이노 조종기를 붙인 뒤 **버튼과 터치를 번갈아 쓰면 캐릭터가 마지막 터치 위치로 튀었습니다.** 버튼을 뗀 순간 남아 있던 latch가 살아난 것입니다.
+
+```python
+if dx:                          # 조종기로 조작 중
+    self.px += dx * SPEED * dt
+    self.touch.take_tap()       # 남은 터치 latch 를 버린다
+elif self.touch.contact():
+    ...
+    if not self.touch.pressed and abs(gap) < 2.0:
+        self.touch.take_tap()   # 탭이 목표에 도달했으면 소비
+```
+
+여러 단계로 넘어가는 화면에서도 같습니다. 다음 단계 전에 비우지 않으면 **한 번 누른 게 두 단계를 동시에 통과**합니다.
 
 ## 함정 5. `struct` 크기를 8바이트로 박으면 깨집니다 {#pitfall-5}
 
