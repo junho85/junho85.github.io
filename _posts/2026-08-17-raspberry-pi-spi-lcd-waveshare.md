@@ -55,7 +55,7 @@ sudo sh -c "head -c 307200 /dev/urandom > /dev/fb0"
 
 - **Raspberry Pi 3 Model B Rev 1.2** (1GB) — 다른 모델도 됩니다
 - **Waveshare(SpotPear) 3.5inch RPi LCD (A) V3** — ILI9486 컨트롤러 + ADS7846 호환 저항막 터치, 480×320
-- Raspbian GNU/Linux 13 (trixie), 커널 6.18
+- Raspberry Pi OS 13 (trixie), 커널 6.18 — **32비트·64비트 양쪽에서 확인했습니다** ([32비트라야 한다는 얘기](#bitness))
 
 ⚠️ 이 LCD는 **HDMI가 아니라 SPI** 방식입니다. HDMI 디스플레이처럼 꽂으면 알아서 되는 물건이 아니라, 커널에 "이 SPI 장치가 화면이다"라고 알려주는 device tree 오버레이가 반드시 필요합니다.
 
@@ -266,12 +266,19 @@ sudo usermod -aG video $USER
 
 **DejaVu 폰트에는 한글 글리프가 없습니다.** 위 예제에서 폰트만 DejaVu로 바꾸면 한글이 전부 네모(□)로 나옵니다([아래 게임 절의 비교 사진](#hangul-font) 참고).
 
-한국 로케일로 설치했다면 나눔이 이미 깔려 있습니다.
+**desktop 이미지에도 안 들어있습니다.** 한국 로케일·한국어 키보드로 설치한 64-bit desktop 이미지에서 확인해봤더니 0개였습니다.
 
 ```bash
-fc-list :lang=ko | head
+fc-list | grep -c nanum
+# 0                    ← 없다
+
+sudo apt install -y fonts-nanum
+fc-list :lang=ko | head -1
 # /usr/share/fonts/truetype/nanum/NanumGothic.ttf: NanumGothic,나눔고딕
 ```
+
+> 폰트가 없으면 `hello-fb.py`가 에러 없이 **네모만 잘 그립니다.** 한글이 깨져 보이면 코드를 의심하기 전에 이걸 먼저 확인하세요.
+{: .prompt-tip }
 
 숫자가 실시간으로 바뀌는 자리에는 **고정폭 `NanumGothicCoding`** 을 쓰면 글자가 흔들리지 않습니다.
 
@@ -685,6 +692,26 @@ getconf LONG_BIT              # 32
 | 64비트 | **Debian** GNU/Linux |
 
 아키텍처는 `uname -m`이 아니라 **userland 기준**(`dpkg --print-architecture`)으로 봐야 합니다.
+
+### 그럼 32비트를 골라야 하나 — 아닙니다 {#bitness}
+
+**"SPI LCD를 쓰려면 32비트를 골라라"** 는 얘기가 돌아다닙니다. 저도 그렇게 알고 있었는데 근거를 설명할 수 없어서, **64-bit 이미지로 다시 구워 확인했습니다.**
+
+```
+dpkg           : arm64
+uname -m       : aarch64
+os-release     : PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+
+fb0 : fb_ili9486  480,320
+[   11.895516] graphics fb0: fb_ili9486 frame buffer, 480x320, fps=31, spi0.0 at 24 MHz
+N: Name="ADS7846 Touchscreen"
+```
+
+**전부 그대로 됩니다.** 오버레이 바인딩, 프레임버퍼 그리기, 한글, 터치, 게임까지 확인했습니다.
+
+그 말의 출처는 **[`fbcp-ili9341`](https://github.com/juj/fbcp-ili9341)** 입니다. HDMI 화면을 SPI LCD로 복사해주는 도구인데, 라즈베리파이의 옛 **DispmanX** API에 의존해서 64비트에서는 빌드되지 않습니다. 이 글의 방식은 **커널 드라이버(`fbtft`)에 직접 그리는 것**이라 그 제약과 무관합니다.
+
+다만 64비트로 옮기면 **위에서 본 `struct input_event`가 16 → 24바이트로 바뀝니다.** `"llHHi"`로 써두면 코드를 고칠 일이 없습니다.
 
 ## 하드웨어부터 배제하세요
 
