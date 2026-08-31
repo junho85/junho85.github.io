@@ -11,7 +11,9 @@ services:
       - bundle:/usr/local/bundle
     environment:
       - JEKYLL_ENV=development
-    command: bundle exec jekyll serve --host 0.0.0.0 --livereload --force_polling
+    # --future: 예약 발행 글(미래 날짜)도 로컬에서는 미리 보이게 한다.
+    # 실제 배포는 GitHub Actions 가 별도로 빌드하므로 영향 없음.
+    command: bundle exec jekyll serve --host 0.0.0.0 --livereload --force_polling --future
 
 volumes:
   bundle:

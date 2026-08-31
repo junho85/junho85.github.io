@@ -27,7 +27,7 @@ image: /assets/images/2026-08-30-umbrella-shop-keyframe.jpg
 
 > ⚠️ **라이선스를 먼저 확인하세요.** MiniMax H3 Community License 는 Excluded Territories 에 **대한민국을 포함**합니다(§I.5). 그리고 §V.4 의 지역 제한이 가중치뿐 아니라 **생성된 결과물(Outputs)까지** 미칩니다 — `use, reproduce, modify, distribute, or display` 가 모두 금지 대상입니다. **Hugging Face 에서 토큰 없이 받아진다고 해서 써도 된다는 뜻이 아닙니다.**
 >
-> [platform.minimax.io/h3-license](https://platform.minimax.io/h3-license) 에서 개별 인가를 신청하면 됩니다. 저는 신청 다음 날 인가를 받았습니다.
+> [platform.minimax.io/h3-license](https://platform.minimax.io/h3-license) 에서 개별 인가를 신청하면 됩니다. 저는 신청하고 얼마 지나지 않아 인가를 받았습니다.
 {: .prompt-warning }
 
 > 💡 **참고 — 라이선스가 기술 블로그 발행을 권장합니다.** §III.3 의 "encouraged to" 목록에 **`publish at least one technical blog post or a public statement describing your experience using MiniMax H3 Works`** 가 있습니다. 같은 목록의 **`add an AI-generation identifier to files produced`** 와 **`Powered by MiniMax H3`** 표시도 그래서 위에 달았습니다.
