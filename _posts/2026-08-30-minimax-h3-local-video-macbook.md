@@ -30,9 +30,6 @@ image: /assets/images/2026-08-30-umbrella-shop-keyframe.jpg
 > [platform.minimax.io/h3-license](https://platform.minimax.io/h3-license) 에서 개별 인가를 신청하면 됩니다. 저는 신청하고 얼마 지나지 않아 인가를 받았습니다.
 {: .prompt-warning }
 
-> 💡 **참고 — 라이선스가 기술 블로그 발행을 권장합니다.** §III.3 의 "encouraged to" 목록에 **`publish at least one technical blog post or a public statement describing your experience using MiniMax H3 Works`** 가 있습니다. 같은 목록의 **`add an AI-generation identifier to files produced`** 와 **`Powered by MiniMax H3`** 표시도 그래서 위에 달았습니다.
-{: .prompt-tip }
-
 ## 필요한 것
 
 - **통합 메모리 36GB** — 15초 렌더 실측 피크 28.2GiB
@@ -68,11 +65,15 @@ hf download MiniMaxAI/MiniMax-H3 --include "FL2VA/*" --local-dir ./MiniMax-H3
 
 옵션은 **전부 기본값이 최선**입니다. 속도·품질 옵션 5가지를 50회 돌려 재봤는데 결론이 그랬습니다. 비용을 줄이고 싶으면 `--steps` 하나만 낮추면 됩니다.
 
-| 용도 | 설정 | 768² / 56프레임 기준 |
-| --- | --- | ---: |
-| 컷 탐색 | `--core-reuse 4 --token-reduction` | 7.3분 |
-| 다듬기 | `--steps 12` | 20분 |
-| **납품** | **기본값** | **4분** |
+768² / 56프레임(2.33초) 기준입니다.
+
+| 용도 | 설정 | M3 Max | M5 Max |
+| --- | --- | ---: | ---: |
+| 컷 탐색 | `--core-reuse 4 --token-reduction` | 7.3분 | — |
+| 다듬기 | `--steps 12` | 20분 | — |
+| **납품** | **기본값** | 37분 | **4분** |
+
+M3 Max 쪽은 `--ssd-streaming` 을 붙인 값입니다(36GB 에서는 필수). **M5 에서는 절감 옵션을 쓸 이유가 거의 없습니다** — 기본값이 이미 4분이라 컷 탐색용 옵션의 절감폭이 수십 초 수준으로 줄어듭니다.
 
 ## 길이는 15초가 최대입니다
 
