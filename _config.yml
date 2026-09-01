@@ -67,13 +67,29 @@ collections:
     output: true
     sort_by: order
 
+# 댓글 — giscus (GitHub Discussions 기반)
+#   댓글은 이 저장소의 Discussions > General 에 쌓인다.
+#   repo_id / category_id 는 GitHub GraphQL 로 조회한 값이다.
+comments:
+  provider: giscus
+  giscus:
+    repo: junho85/junho85.github.io
+    repo_id: MDEwOlJlcG9zaXRvcnk1OTI4Mzg0OA==
+    category: General
+    category_id: DIC_kwDOA4iZiM4DEnVs
+    mapping: pathname          # 글 경로로 Discussion 을 매칭
+    strict: 1                  # 경로 해시로 엄격 매칭
+    input_position: bottom
+    lang: ko
+    reactions_enabled: 1
+
 defaults:
   - scope:
       path: ""
       type: posts
     values:
       layout: post
-      comments: false
+      comments: true
       toc: true
       tail_includes:
         - related-posts

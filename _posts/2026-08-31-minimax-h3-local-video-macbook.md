@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "맥북에서 AI 영상 생성 모델 돌리기 - MiniMax H3 로컬 실행과 30초 애니메이션 만들기"
-date: 2026-08-30
+date: 2026-08-31
 tags: ["MiniMax", "H3", "AI", "video-generation", "Apple Silicon", "M5", "Metal", "local-inference", "h3.c", "animation"]
 image: /assets/images/2026-08-30-umbrella-shop-keyframe.jpg
 ---
