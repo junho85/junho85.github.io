@@ -6,6 +6,8 @@ tail_includes:
   - related-posts
   - post-nav
   - adsense-tail
+script_includes:
+  - comment
 ---
 
 {% include lang.html %}
@@ -176,5 +178,7 @@ tail_includes:
   <!-- div.post-tail-wrapper -->
 </article>
 
-<!-- 댓글을 본문 바로 아래로 (테마 기본은 tail_includes 뒤라 너무 아래에 붙는다) -->
-{% include comment.html %}
+<!-- 댓글 삽입 지점. 스크립트는 페이지 끝(script_includes)에서 실행되고,
+     오버라이드한 _includes/comments/giscus.html 이 위젯을 여기에 넣는다.
+     (테마 기본은 footer 앞이라 광고·관련글 아래로 밀린다) -->
+<div id="comments-anchor"></div>
