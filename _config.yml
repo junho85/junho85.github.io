@@ -91,6 +91,8 @@ defaults:
       layout: post
       comments: true
       toc: true
+      # 댓글은 _layouts/post.html 에서 본문 바로 아래에 렌더한다.
+      # 여기 나열한 것들은 그 아래로 간다.
       tail_includes:
         - related-posts
         - post-nav
