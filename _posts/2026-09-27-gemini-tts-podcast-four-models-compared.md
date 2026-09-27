@@ -2,15 +2,18 @@
 layout: post
 title: "Gemini TTS 네 가지로 같은 팟캐스트를 만들어 봤습니다 - 2.5 Pro, 3.1 Flash, 3.8 Flash, 3.8 Flash-Lite"
 date: 2026-09-27
-tags: ["TTS", "Gemini", "gemini-3.8-flash-tts", "음성 합성", "팟캐스트", "Voice replication", "음성 복제"]
+tags: ["TTS", "Gemini", "gemini-3.8-flash-tts", "음성 합성", "팟캐스트"]
 image:
   path: /assets/images/2026-09-27-gemini-tts-supported-models.png
   alt: "Gemini API 음성 생성 문서의 지원 모델 표. Gemini 3.8 Flash TTS와 3.8 Flash-Lite TTS는 단일 화자, 다화자, Voice design, Voice replication 네 칸에 모두 체크 표시가 있고, 3.1 Flash TTS Preview와 2.5 Pro Preview TTS는 Voice design과 Voice replication 칸이 비어 있다"
 ---
 
+> Gemini TTS 3.8 시험기 3편 중 1편입니다. **1편 네 모델 비교** · [2편 내 목소리 복제](/2026/09/27/gemini-tts-voice-replication.html) · [3편 3.8 기능 시험](/2026/09/27/gemini-3-8-tts-features-tested.html)
+{: .prompt-info }
+
 2인 대화 팟캐스트를 만드는 스킬을 쓰고 있습니다. 대본을 쓰면 Gemini 다화자 TTS가 진행자와 게스트 목소리로 읽어 주는 방식입니다. 기본 모델을 `gemini-3.1-flash-tts-preview`에서 새로 나온 `gemini-3.8-flash-tts`로 올리면서, 같은 대본을 네 모델로 만들어 비교했습니다.
 
-요약하면 이렇습니다. **3.8은 올해 말까지 3.1의 절반 이하 가격이고, 짧은 샘플의 품질은 구별되지 않았습니다. 다만 모델 이름만 바꾸면 요청이 전부 실패하고, 영어로 적은 고유명사를 엉뚱한 단어로 읽는 경우가 있었습니다.** 청크 사이 목소리 흔들림은 진행자 쪽만 나아졌습니다. 내 목소리 복제도 직접 해 봤습니다. 복제한 목소리는 실제 녹음끼리만큼 원본에 가까웠지만, 2인 대화를 한 번에 만드는 방식에는 넣을 수 없었습니다.
+요약하면 이렇습니다. **3.8은 올해 말까지 3.1의 절반 이하 가격이고, 짧은 샘플의 품질은 구별되지 않았습니다. 다만 모델 이름만 바꾸면 요청이 전부 실패하고, 영어로 적은 고유명사를 엉뚱한 단어로 읽는 경우가 있었습니다.** 청크 사이 목소리 흔들림은 진행자 쪽만 나아졌습니다. 내 목소리 복제는 [2편](/2026/09/27/gemini-tts-voice-replication.html), 문서가 내세운 나머지 기능은 [3편](/2026/09/27/gemini-3-8-tts-features-tested.html)에 따로 정리했습니다.
 
 ## 결론부터 {#tldr}
 
@@ -22,15 +25,14 @@ image:
 | 짧은 샘플 품질(10점) | - | 8/9/10/8 | 8/9/10/8~9 | 7~8/9/10/8 |
 | 두 번째 "PostgreSQL" | - | 2회 중 0회 다른 단어 | **3회 중 2회 다른 단어** | 3회 중 0회 |
 | 청크 간 음 높이 편차(진행자/게스트) | **6% / 7%** | 12% / 15% | 8% / 16% | 6% / 13% |
-| 목소리 복제 | 안 됨 | 문서상 안 됨, 실제로는 읽음 | 만들기·읽기 | 읽기만(만들기는 거절) |
+| 목소리 복제([2편](/2026/09/27/gemini-tts-voice-replication.html)) | 안 됨 | 문서상 안 됨, 실제로는 읽음 | 만들기·읽기 | 읽기만(만들기는 거절) |
 
 _품질 점수는 자연스러움/발음 명료도/화자 구분/대화 호흡 순서다. 음 높이 편차는 한 편 안에서 청크끼리 벌어진 정도를 세 번 만들어 평균 냈다_
 
 - **가격이 가장 크게 달라졌습니다.** 3.8 Flash는 3.1보다 출력 단가가 55% 싸고, 2026년이 끝나 두 배로 올라도 조금 쌉니다.
 - **API가 호환되지 않게 바뀌었습니다.** 모델 이름만 바꾸면 400 오류가 나고, 기본 출력이 WAV로 바뀌어 예전 코드로 이어 붙이면 청크마다 "딱" 소리가 납니다.
 - **영어 고유명사는 한글로 적어야 합니다.** 3.8 Flash가 "PostgreSQL은"을 「포스트지피티」 「포스트클라우드」로 읽었고, 대본에 `포스트그레스큐엘`로 적자 3회 모두 제대로 읽었습니다.
-- **목소리 일관성은 가장 오래된 2.5 Pro가 제일 좋았습니다.** 3.8 Flash는 3.1보다 진행자가 안정됐지만 남성 게스트는 비슷하게 흔들렸습니다. 기본 목소리(미국 영어) 대신 **한국어 목소리 두 개로 바꾸자 청크 간 게스트 흔들림이 절반 가까이** 줄었습니다. 다만 다시 만들 때의 차이는 커졌습니다.
-- **문서가 내세운 기능 대부분이 실제로 동작했습니다.** style 지시(속삭임, 느리게)와 인라인 태그(웃음, 기침)는 수치와 판정으로 확인됐고, 5분 분량을 한 번에 만들어도 뒷부분이 뭉개지지 않았습니다. Voice design으로 만든 목소리는 기본 목소리 대신 써도 흔들림이 줄지 않았습니다.
+- **목소리 일관성은 가장 오래된 2.5 Pro가 제일 좋았습니다.** 3.8 Flash는 3.1보다 진행자가 안정됐지만 남성 게스트는 비슷하게 흔들렸습니다. 기본 목소리 Leda와 Charon은 미국 영어 목소리인데, 한국어 목소리로 바꾼 결과는 [3편](/2026/09/27/gemini-3-8-tts-features-tested.html#korean-voices)에 있습니다.
 
 ## 직접 들어 보세요 {#listen}
 
@@ -122,8 +124,13 @@ for each text part in the contents.
 | 입력 텍스트 | 안내문, 연기 지시를 섞어도 된다 | **적힌 글자를 그대로 읽는다.** 톤은 `style` 필드로 |
 | 기본 출력 | 헤더 없는 raw PCM(`audio/l16`) | **WAV(44바이트 RIFF 헤더 포함)** |
 
+<details markdown="1" style="margin-bottom:1.25rem">
+<summary>문서 원문: Migration guide (스크린샷)</summary>
+
 ![Gemini 3.8 TTS 마이그레이션 가이드. speech_metadata로 지시 옮기기, 인라인 태그, 대사마다 speaker 지정, Voice design, 기본 WAV 출력 다섯 항목](/assets/images/2026-09-27-gemini-tts-migration.png)
 _speech-generation 문서의 Migration guide 절(2026-09-27 캡처, 문서 최종 수정 2026-09-24). 5번이 기본 출력 변경이다_
+
+</details>
 
 3.8 요청은 이렇게 생겼습니다. 대사 하나가 `content` 항목 하나이고, 누가 말하는지를 `annotations`에 답니다.
 
@@ -150,10 +157,18 @@ _speech-generation 문서의 Migration guide 절(2026-09-27 캡처, 문서 최�
 
 귀에 해로울 만큼 커서 음성은 싣지 않았습니다. 위 요청처럼 `mime_type: "audio/l16"`을 명시하면 예전과 같은 raw PCM이 옵니다. 문서의 제한 사항 절에도 같은 주의가 있습니다.
 
+<details markdown="1" style="margin-bottom:1.25rem">
+<summary>문서 원문: Limitations (스크린샷)</summary>
+
 ![Gemini TTS 문서 Limitations 절. 한 요청의 다화자 생성은 prebuilt 음성 2명까지, 기본 audio/wav 응답은 44바이트 RIFF 헤더가 있으니 raw PCM을 요청하거나 헤더를 떼라는 내용, 커스텀 음성 저장 한도](/assets/images/2026-09-27-gemini-tts-limitations.png)
-_같은 문서의 Limitations 절. 둘째 항목에 44바이트 헤더 이야기와, 뒤에서 다룰 복제 음성 제약이 함께 있다_
+_같은 문서의 Limitations 절. 둘째 항목에 44바이트 헤더 이야기와, [2편](/2026/09/27/gemini-tts-voice-replication.html#replication-limit)에서 다룰 복제 음성 제약이 함께 있다_
+
+</details>
 
 ## 비용 {#cost}
+
+<details markdown="1" style="margin-bottom:1.25rem">
+<summary>문서 원문: 가격표 (스크린샷 3장)</summary>
 
 ![Gemini 3.8 Flash TTS 가격표. 입력 텍스트 1M 토큰당 0.50달러, 출력 오디오 9.00달러(2026년 12월 31일까지), 2027년 1월 1일부터 각각 1.00달러와 18.00달러](/assets/images/2026-09-27-gemini-tts-pricing-flash.png)
 _Gemini API 가격 페이지의 Gemini 3.8 Flash TTS 항목(2026-09-27 캡처). 할인 기간이 2026년 12월 31일까지로 적혀 있다_
@@ -163,6 +178,8 @@ _같은 페이지의 3.1 Flash TTS Preview 항목. 무료 등급은 "Used to imp
 
 ![Gemini 3.8 Flash-Lite TTS 가격표. 입력 0.50달러, 출력 6.00달러(2026년 12월 31일까지), 2027년부터 1.00달러와 12.00달러](/assets/images/2026-09-27-gemini-tts-pricing-lite.png)
 _같은 페이지의 3.8 Flash-Lite TTS 항목_
+
+</details>
 
 Flash-Lite는 출력 $6(2027년부터 $12)이고, 2.5 Pro는 3.1과 같은 $20이지만 무료 등급이 없습니다. 대본(입력)은 수백 토큰이라 비용에서 무시할 수준이고, 사실상 **출력 오디오 토큰**이 비용입니다.
 
@@ -200,8 +217,13 @@ _* 2.5 Pro는 usage를 따로 측정하지 않아 단가가 같은 3.1 수치를
 
 문서는 3.8 Flash를 "스튜디오급 음질, 섬세한 연기, 긴 글에서 흔들리지 않는 목소리"용으로, Flash-Lite를 "3.1을 대체하는 빠르고 싼 모델"로 소개합니다. 이번 표본으로는 그 차이를 확인하지 못했습니다.
 
+<details markdown="1" style="margin-bottom:1.25rem">
+<summary>문서 원문: 지원 모델 표와 모델 선택 안내 (스크린샷)</summary>
+
 ![Gemini TTS 문서의 지원 모델 표와 모델 선택 안내. 3.8 Flash는 최고 음질과 표현력, 3.8 Flash-Lite는 3.1 Flash TTS Preview를 대체하는 빠르고 저렴한 모델로 소개](/assets/images/2026-09-27-gemini-tts-supported-models.png)
 _speech-generation 문서의 Supported models 절과 When to use which model 절(2026-09-27 캡처)_
+
+</details>
 
 ## 영어 고유명사는 한글로 적어야 합니다 {#proper-nouns}
 
@@ -212,8 +234,6 @@ _speech-generation 문서의 Supported models 절과 When to use which model 절
 | 3.1 Flash ×2 | 포스트그레스 · 포스트그레스엘(1회차, 판정 모델끼리 갈림), 포스트그레스 |
 | **3.8 Flash ×3** | **포스트지피티**, **포스트클라우드**, 포스트그레스 |
 | 3.8 Flash-Lite ×3 | 포스트그레스, 포스트그레스, 포스트그레스큐엘 · 포스트그레스그(3회차, 갈림) |
-| 3.8 Flash + 한국어 목소리 ×3 | 포스트그레스 에스큐엘, **피오에스지알이**(알파벳을 한 글자씩), 포스트그레스 |
-| 3.8 Flash + Voice design 목소리 ×3 | **패스터지피티**, **포스트위스퍼**, **포스트지알아이** |
 | 3.8 Flash + 대본에 `포스트그레스큐엘`로 적음 ×3 | 포스트그레스큐엘 3회 |
 
 3.8 Flash는 3회 중 2회 **아예 다른 단어**로 읽었습니다. 판정 모델 두 개의 결과가 같았고, 확신도는 모두 "상"이었습니다. 해당 부분만 잘라 두었습니다.
@@ -233,7 +253,7 @@ _speech-generation 문서의 Supported models 절과 When to use which model 절
 <p><b>3.8 Flash, 대본에 한글로 적었을 때</b> - 「포스트그레스큐엘」</p>
 <audio controls preload="none" src="/assets/audio/2026-09-27-pg-38-flash-hangul.mp3" style="width:100%"></audio>
 
-목소리를 [한국어 목소리](#korean-voices)나 [Voice design 목소리](#voice-design)로 바꿔도 사라지지 않았고, 설계한 목소리는 3회 모두 틀렸습니다. 「위스퍼」는 대본 뒤쪽의 whisper가 섞여 든 것으로 보입니다. 같은 대본 안에서도 한 번은 맞고 한 번은 틀렸으니, 한 번 맞았다고 안심할 수 없습니다. **대본에 영어 고유명사를 쓰지 않고 한글 발음으로 적는 것**이 가장 확실합니다. 위의 비교용 팟캐스트 대본도 그렇게 썼습니다.
+목소리를 한국어 목소리나 Voice design 목소리로 바꿔도 사라지지 않았습니다([3편](/2026/09/27/gemini-3-8-tts-features-tested.html#korean-voices)). 같은 대본 안에서도 한 번은 맞고 한 번은 틀렸으니, 한 번 맞았다고 안심할 수 없습니다. **대본에 영어 고유명사를 쓰지 않고 한글 발음으로 적는 것**이 가장 확실합니다. 위의 비교용 팟캐스트 대본도 그렇게 썼습니다.
 
 ## 숫자와 퍼센트는 문제없었습니다 {#numbers}
 
@@ -253,302 +273,44 @@ _speech-generation 문서의 Supported models 절과 When to use which model 절
 | 3.1 Flash | 11.8% (20.1%) | 14.9% (25.3%) | 4.2% | 1.1% |
 | 3.8 Flash | 8.2% (11.5%) | 15.6% (22.6%) | 2.4% | 1.2% |
 | 3.8 Flash-Lite | 5.9% (8.1%) | 12.6% (22.5%) | 4.2% | 6.4% |
-| 3.8 Flash + 한국어 목소리 | 8.0% (10.5%) | **8.4%** (17.3%) | 1.0% | 6.6% |
-| 3.8 Flash + Voice design 목소리 | 12.0% (14.7%) | 16.1% (17.8%) | 2.0% | 6.9% |
 
 _모델별 3회, 회차마다 청크 4개. 같은 대본을 같은 경계로 나눴으므로 청크 내용은 모델끼리 같다. 「다시 만들 때」는 세 회차의 편 평균 음 높이가 서로 벌어진 정도다_
 
 - **가장 안정적인 건 가장 오래된 2.5 Pro입니다.** 두 사람 모두 10%를 넘은 적이 없습니다.
 - **3.8 Flash는 진행자가 3.1보다 안정됐습니다**(평균 11.8% → 8.2%, 최악 20% → 11.5%).
 - **남성 게스트는 3.8에서도 그대로입니다**(평균 14.9% → 15.6%). 한 회차에서는 청크별 중앙값이 108, 121, 106, 96Hz로 움직였습니다.
-- **한국어 목소리 두 개(`ko-kr-podcaster-4`, `-8`)로 바꾸자 청크 간 게스트 흔들림이 15.6% → 8.4%로 줄었습니다.** 반대로 게스트를 다시 만들 때의 차이는 1.2% → 6.6%로 커졌습니다. 언어만이 아니라 목소리 자체가 바뀐 비교이고, 두 목소리만 측정했습니다. 기본 목소리 Leda와 Charon은 미국 영어 목소리입니다(아래 [한국어 목소리](#korean-voices)).
-- **Voice design으로 만든 목소리는 흔들림이 줄지 않았습니다.** 진행자는 12.0%로 기본 목소리(8.2%)보다 컸고, 게스트는 16.1%로 비슷했습니다(한 쌍, 3회).
+- **목소리를 바꾸면 달라집니다.** 한국어 목소리와 Voice design 목소리로 같은 시험을 한 결과는 [3편](/2026/09/27/gemini-3-8-tts-features-tested.html#korean-voices)에 있습니다.
 - **다시 만들 때의 차이는 청크끼리보다 작습니다.** 편 평균으로 보면 모든 모델이 1~6% 안이고, 3.8 Flash가 2.4%, 1.2%로 가장 작았습니다. 흔들림은 주로 한 편 안에서 청크가 바뀔 때 생깁니다.
 
-문서에도 목소리 일관성을 다룬 절이 있습니다. 흔들림의 가장 흔한 원인으로 예전 모델에서 쓰던 **긴 연기 지시문**을 꼽고, Voice design으로 목소리를 만들어 그 `voice_...` ID를 계속 쓰라고 권합니다. 이 스킬은 원래 연기 지시를 넣지 않으니, 문서가 말한 원인은 해당하지 않습니다. 그래도 설계한 목소리로 바꾸면 달라지는지 해 봤는데, 위 표처럼 줄지 않았습니다.
+문서에도 목소리 일관성을 다룬 절이 있습니다. 흔들림의 가장 흔한 원인으로 예전 모델에서 쓰던 **긴 연기 지시문**을 꼽고, Voice design으로 목소리를 만들어 그 `voice_...` ID를 계속 쓰라고 권합니다. 이 스킬은 원래 연기 지시를 넣지 않으니, 문서가 말한 원인은 해당하지 않습니다. 그래도 설계한 목소리로 바꾸면 달라지는지 [3편](/2026/09/27/gemini-3-8-tts-features-tested.html#voice-design)에서 해 봤는데, 줄지 않았습니다.
+
+<details markdown="1" style="margin-bottom:1.25rem">
+<summary>문서 원문: Consistency across generations (스크린샷)</summary>
 
 ![Gemini TTS 문서의 Consistency across generations 절. 긴 Audio Profile 문단이 목소리 흔들림의 가장 흔한 원인이며, Voice design으로 만든 voice ID를 쓰고, 목소리를 유지하라는 메타 지시는 오히려 흔들림을 키운다는 내용](/assets/images/2026-09-27-gemini-tts-consistency.png)
 _speech-generation 문서 Prompting guide의 Consistency across generations and what to avoid 절(2026-09-27 캡처)_
 
+</details>
+
 **이 측정의 한계**도 적어 둡니다. 음 높이는 억양과 감정에 따라서도 달라지므로 "같은 사람처럼 들리는가"를 전부 설명하지 못합니다. 경계를 늘리려고 청크를 300자로 잘게 나눴는데, 스킬 기본값(620자)에서는 경계가 절반으로 줄어듭니다. 판정 모델에게 들려주고 일관성을 물었을 때는 16건 중 14건이 두 사람 모두 10점이었고, 낮은 점수를 준 2건은 다른 판정 모델이 10점을 줘서 청취 판정은 근거로 쓰지 않았습니다. [위의 샘플](#listen)로 직접 들어 보시는 게 가장 정확합니다.
-
-## 내 목소리를 쓸 수 있을까 {#voice-replication}
-
-문서상으로는 **3.8 Flash와 3.8 Flash-Lite가 Voice replication(음성 복제)을 지원**하고, 3.1과 2.5 Pro는 지원하지 않습니다. 짧은 녹음으로 내 목소리를 복제해 ID를 받고, 이후 합성에서 Leda 같은 기본 목소리 대신 그 ID를 넣는 방식입니다. 직접 해 보니 문서와 다른 부분이 있었습니다.
-
-![Gemini API Voice replication 문서 첫 부분. POST /v1beta/voices로 짧은 음성에서 목소리를 복제하며, Gemini 3.8 Flash TTS와 3.8 Flash-Lite TTS 모두 지원한다는 문장과, 원본 음성과 동의 녹음을 검증해 voice ID를 받은 뒤 합성에 쓰는 흐름도](/assets/images/2026-09-27-gemini-tts-replication-intro.png)
-_voice-replication 문서 첫 부분(2026-09-27 캡처). 도식에는 합성 음성에 SynthID 워터마크가 들어간다고 적혀 있다_
-
-### 녹음 두 개가 필요합니다 {#replication-requirements}
-
-- **원본 음성**: 복제할 사람의 자연스러운 말소리 10~30초
-- **동의 녹음**: 같은 사람이 정해진 동의 문장을 직접 읽은 녹음
-
-서버가 두 녹음이 같은 사람인지, 동의 문장을 정확히 읽었는지 확인한 뒤에야 목소리를 만들어 줍니다. 문서는 두 녹음을 같은 마이크, 같은 공간에서 하라고 권합니다. Google AI Studio에서 브라우저로 바로 녹음하고 들어 볼 수도 있습니다.
-
-![Voice replication 문서의 Audio and consent requirements 절. 10~30초 원본 음성과, 같은 화자가 동의 문장을 읽은 녹음이 필요하다는 내용](/assets/images/2026-09-27-gemini-tts-replication-consent.png)
-_voice-replication 문서의 Audio and consent requirements 절_
-
-동의 문장은 30개 언어를 지원하고, 한국어도 있습니다.
-
-![지원 언어별 동의 문장 표 중 영어와 한국어 행. 한국어 문장은 "나는 이 음성의 소유자이며 구글이 이 음성을 사용하여 음성 합성 모델을 생성할 것을 허용합니다."](/assets/images/2026-09-27-gemini-tts-replication-korean.png)
-_Supported consent phrases by language 표에서 영어와 한국어 행만 남기고 나머지를 가렸다_
-
-복제한 목소리는 두 방식으로 보관합니다. 서버에 저장하면 프로젝트당 200개까지 1년간 쓸 수 있고, 저장하지 않으면 암호화된 `voicekey_...`를 받아 직접 보관하며 7일간 쓸 수 있습니다. 가격 페이지에서 복제 자체에 대한 별도 항목은 찾지 못했습니다.
-
-### 예전에 녹음한 샘플로는 거절됐습니다 {#replication-mismatch}
-
-처음에는 로컬 음성 클론(Qwen3-TTS)용으로 예전에 녹음해 둔 23초짜리 샘플을 원본으로 쓰고, 동의 문장만 새로 녹음했습니다. 동의 문장은 판정 모델 두 개가 한 글자도 틀리지 않았다고 확인했는데도 거절됐습니다.
-
-```text
-Consent flow failed. ...
-Voice mismatch detected. The speaker in the consent audio does not match
-the speaker in the voice sample.
-```
-
-동의 녹음의 음량이 원본보다 12dB 작아서 맞춰 봤지만 결과는 같았습니다. **원본 음성도 동의 녹음과 같은 마이크, 같은 자리에서 새로 녹음하자 4초 만에 통과했습니다.** 같은 사람인데도 녹음 환경이 다르면 다른 사람으로 판정될 수 있습니다. 아래 화자 유사도에서도 예전 샘플과 새 녹음은 0.842로, 같은 자리에서 녹음한 두 파일(0.912)보다 낮았습니다.
-
-테스트라서 서버에 저장하지 않는 방식(`store: false`)으로 만들었습니다. 이 방식은 7일 뒤 만료됩니다.
-
-### Flash-Lite로는 만들 수 없고, 3.1은 문서와 달리 읽었습니다 {#replication-models}
-
-복제를 만들 때 모델을 지정하는데, 모델마다 결과가 달랐습니다.
-
-| 모델 | 복제 만들기 | 만든 목소리로 읽기 |
-|---|---|---|
-| 3.8 Flash | 됨 | 됨 |
-| 3.8 Flash-Lite | **거절**("Voice Replication을 지원하지 않는다") | 됨 |
-| 모델 지정 안 함 | 됨(3.8 Flash로 만들어짐) | - |
-| 3.1 Flash | - | **됨**(문서상 미지원) |
-
-Flash-Lite를 지정하면 서버가 "모델을 빼면 기본 생성 모델로 만들고, 그 목소리는 어떤 TTS 모델에서도 쓸 수 있다"고 안내합니다. 실제로 그렇게 만든 목소리를 Flash-Lite로 읽으면 잘 됐습니다. 문서의 "Flash-Lite도 지원"은 **읽기** 쪽 이야기로 보입니다.
-
-3.1도 복제 키를 받아 읽었습니다. 키를 조금이라도 바꾸면 "복제 키를 해석할 수 없다"며 거절하고, 목소리를 아예 빼도 400이 납니다. 키를 무시하고 기본 목소리로 읽은 것은 아닙니다. 다만 문서에 없는 동작이라 언제든 바뀔 수 있습니다.
-
-### 들어 보세요: 실제 목소리와 복제 목소리 {#replication-listen}
-
-먼저 실제 녹음입니다. 복제에 쓴 원본 음성의 앞 10초만 잘랐습니다. 동의 문장 녹음은 공개하지 않습니다.
-
-<p><b>실제 녹음</b> (원본 음성 앞 10초)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-clone-real-excerpt.mp3" style="width:100%"></audio>
-
-아래는 모두 같은 문장을 복제한 목소리로 읽힌 것입니다. 모델마다 두 번씩 만들어 1회차를 실었습니다. 비교를 위해 파일마다 음량만 같은 수준으로 맞췄습니다.
-
-> 오늘은 제 목소리를 복제해서 만든 음성을 비교해 보겠습니다. 같은 문장을 구글 제미나이와 로컬 모델로 각각 읽혀 봤는데요, 어느 쪽이 더 저처럼 들리는지 직접 들어 보시죠.
-
-<p><b>3.8 Flash</b></p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-clone-38-flash.mp3" style="width:100%"></audio>
-
-<p><b>3.8 Flash-Lite</b></p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-clone-38-lite.mp3" style="width:100%"></audio>
-
-<p><b>3.1 Flash</b> (문서상 미지원)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-clone-31-flash.mp3" style="width:100%"></audio>
-
-로컬 Qwen3-TTS(맥북에서 생성)는 참조 녹음을 세 가지로 바꿔 만들었습니다. 예전에 녹음해 둔 두 샘플(My Voice 28.3초, My Voice 2 23.3초)과, Gemini에 쓴 것과 같은 새 원본입니다.
-
-<p><b>로컬 Qwen3-TTS ← 새 원본</b> (Gemini와 같은 참조)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-clone-local-qwen-new.mp3" style="width:100%"></audio>
-
-<p><b>로컬 Qwen3-TTS ← My Voice</b> (예전 28초 샘플)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-clone-local-qwen-v1.mp3" style="width:100%"></audio>
-
-<p><b>로컬 Qwen3-TTS ← My Voice 2</b> (예전 23초 샘플)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-clone-local-qwen.mp3" style="width:100%"></audio>
-
-화자 임베딩 모델(resemblyzer)로 실제 녹음과의 유사도를 측정했습니다. 1에 가까울수록 같은 사람이고, 다른 사람인 Charon을 대조군으로 넣었습니다. 모델마다 5개씩 만들었습니다.
-
-| 음성 | 새 원본과 | My Voice 2와 | My Voice와 |
-|---|---|---|---|
-| 실제 녹음: 동의 문장(새 원본과 같은 자리) | 0.912 | 0.838 | 0.850 |
-| 실제 녹음: My Voice 2 샘플 | 0.842 | - | 0.844 |
-| 실제 녹음: My Voice 샘플 | 0.865 | 0.844 | - |
-| **Gemini 3.8 Flash ← 새 원본** ×5 | **0.917~0.936** (평균 0.927) | 0.78~0.82 | 0.82~0.87 |
-| **Gemini 3.8 Flash-Lite ← 새 원본** ×5 | **0.892~0.936** (평균 0.920) | 0.79~0.83 | 0.81~0.85 |
-| Gemini 3.1 Flash ← 새 원본 ×2 | 0.843, 0.855 | 0.77~0.82 | 0.78~0.79 |
-| **로컬 Qwen3-TTS ← 새 원본** ×5 | **0.929~0.956** (평균 0.943) | 0.81~0.83 | 0.79~0.82 |
-| 로컬 Qwen3-TTS ← My Voice 2 ×4 | 0.80~0.87 | **0.80~0.91** (평균 0.873) | 0.73~0.80 |
-| 로컬 Qwen3-TTS ← My Voice ×7 | 0.83~0.88 | 0.81~0.84 | **0.85~0.92** (평균 0.880) |
-| 대조: Charon | 0.60~0.63 | 0.65~0.66 | 0.65 |
-
-_코사인 유사도다. 굵게 표시한 칸이 자기 참조 녹음과의 비교다. 로컬은 쓸 수 있는 후보만 셌다(아래)_
-
-- **복제한 목소리는 모두 자기 참조 녹음과 가장 닮았습니다.** 로컬도 Gemini도 참조를 바꾸면 결과가 그쪽으로 따라갑니다.
-- **같은 참조(새 원본)로 비교하면 셋 다 0.92~0.94 안팎**입니다. 실제 녹음끼리(0.912)보다 높은 값도 나왔는데, 이 지표는 목소리뿐 아니라 마이크와 방 소리까지 닮은 것을 점수로 주는 것으로 보입니다. 그래서 0.91을 넘는 구간 안에서 순위를 매기지는 않았습니다.
-- **3.1은 복제 키를 쓰지만 덜 닮았습니다**(0.84~0.86). 그래도 Charon(0.6 안팎)과는 확연히 다릅니다.
-
-유사도보다 크게 갈린 건 **쓸 수 있는 결과의 비율**이었습니다. 모든 후보의 끝부분을 받아써 확인했습니다.
-
-| | 대본대로 끝까지 읽은 비율 | 불량 |
-|---|---|---|
-| Gemini 3.8 Flash | 5/5 | 없음 |
-| Gemini 3.8 Flash-Lite | 5/5 | 없음 |
-| 로컬 Qwen3-TTS ← 새 원본 | 5/8 | 버리는 문장이 남음 3(그중 1개는 끝부분도 다르게 읽음) |
-| 로컬 Qwen3-TTS ← My Voice | 7/8 | 버리는 문장이 남음 1 |
-| 로컬 Qwen3-TTS ← My Voice 2 | 4/8 | 버리는 문장이 남음 2, 끝 음절 잘림 2 |
-
-_로컬 도구는 끝 음절이 잘리는 문제를 피하려고 뒤에 버리는 문장("감사합니다")을 붙여 만든 뒤 잘라낸다. 그 제거가 실패하거나 끝이 잘린 것을 불량으로 셌다_
-
-로컬은 여러 개를 만들어 골라내야 하고, Gemini는 한 번에 쓸 수 있는 결과가 나왔습니다. 실린 로컬 샘플은 기본 시드 순서대로 봤을 때 첫 번째로 정상인 후보입니다.
-
-음 높이(F0)도 비교해 봤는데, Charon의 음 높이 중앙값(115.9Hz)이 실제 목소리(112.6Hz)와 비슷해서 같은 사람인지 가르는 데는 쓸 수 없었습니다.
-
-### 팟캐스트에 넣으려면 대사별로 만들어야 합니다 {#replication-limit}
-
-위의 [Limitations 절](#wav-header) 둘째 항목대로, **한 요청으로 두 사람 대화를 만드는 기능은 기본 제공 목소리 2명까지만 됩니다.** 실제로 진행자에 복제 키, 게스트에 Charon을 넣어 한 번에 요청하자 400 오류가 났습니다.
-
-그래서 진행자(내 목소리)와 게스트(Charon)를 대사마다 따로 만들고 0.35초 간격으로 이어 붙였습니다. 6줄을 동시에 요청해 6.4초 만에 34초짜리 대화가 나왔습니다.
-
-<p><b>2인 대화</b> - 진행자 내 목소리(3.8 Flash 복제), 게스트 Charon</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-clone-dialog.mp3" style="width:100%"></audio>
-
-한 번에 만드는 방식과 달리 대사 사이 간격은 0.35초로 고정이고, 대사마다 따로 만들었으니 앞 대사의 말투를 이어받지도 않습니다. 이 스킬에 넣으려면 gemini 경로에 대사별 합성 모드를 따로 만들어야 합니다.
-
-한 가지 더 볼 것은 **무료 등급의 데이터 사용**입니다. TTS 모델 가격표에서 무료 등급은 "Used to improve our products"가 Yes로 적혀 있습니다. 복제용으로 올리는 녹음에도 같은 규정이 적용되는지는 문서에서 찾지 못했습니다. 적용된다면 내 목소리 녹음은 유료 등급 키로 올리는 편이 좋겠습니다.
-
-## 문서가 내세운 3.8 기능을 시험해 봤습니다 {#features}
-
-문서가 3.8의 장점으로 내세운 기능을 하나씩 돌려 봤습니다. 판정 모델의 청취가 걸린 시험에는 **태그나 지시를 뺀 같은 문장을 대조군으로** 함께 만들어, 대조군에서도 같은 자리에서 같은 소리가 들렸다고 하면 그 판정은 쓰지 않았습니다.
-
-### 한국어 목소리가 117개 있습니다 {#korean-voices}
-
-목소리 목록(`GET /v1beta/voices`)을 끝까지 넘겨 보니 기본 제공 목소리가 **2,089개**였고, 그중 **한국어(ko-KR)가 117개**였습니다. 팟캐스트 진행자, 내레이터, 상담원 같은 유형과 나이, 음 높이 설명이 붙어 있고, 103개가 서울말, **14개가 부산 사투리**로 분류돼 있습니다.
-
-그런데 이 스킬이 쓰던 **Leda와 Charon은 미국 영어(en-US) 목소리**였습니다. 한국어 대본을 미국 영어 목소리로 읽혀 온 셈입니다. 한국어 팟캐스트 진행자 목소리 두 개(`ko-kr-podcaster-4` 여성, `ko-kr-podcaster-8` 남성)로 바꿔 같은 시험을 돌렸습니다.
-
-- 2인 대화를 한 번에 만드는 방식에 그대로 들어갑니다.
-- [목소리 일관성](#consistency)은 청크 간 게스트 흔들림이 15.6% → **8.4%**로 줄었고, 다시 만들 때의 차이는 1.2% → 6.6%로 커졌습니다.
-- [영어 고유명사](#proper-nouns) 문제는 남았습니다. 3회 중 1회는 PostgreSQL을 알파벳 한 글자씩 읽었습니다.
-- **3.1에서는 쓸 수 없습니다.** "No matching speaker voice found"로 거절됩니다.
-
-<p><b>3.8 Flash + 한국어 목소리</b> (위의 비교와 같은 대본, 1회차)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-podcast-38-ko-voices.mp3" style="width:100%"></audio>
-
-부산 사투리 목소리(`ko-kr-assistant-2`)는 확인하지 못했습니다. 표준어 문장을 읽히면 판정 모델 두 개가 모두 서울말 억양이라고 했고, 사투리 문장("억수로 좋네예")을 읽히면 판정이 갈렸습니다. 서울말 목소리에 같은 사투리 문장을 읽혀도 똑같이 갈려서, 판정 모델이 억양을 가리지 못한다고 봤습니다. 두 음성을 나란히 둡니다.
-
-<p><b>부산 사투리 목소리</b> - 사투리 문장</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-busan-voice-dialect-text.mp3" style="width:100%"></audio>
-
-<p><b>서울말 목소리</b> - 같은 사투리 문장</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-seoul-voice-dialect-text.mp3" style="width:100%"></audio>
-
-### Voice design: 만들기는 쉬웠지만 더 흔들렸습니다 {#voice-design}
-
-Voice design은 목소리를 글로 설명하면 새 목소리를 만들어 주는 기능입니다. 진행자와 게스트를 이렇게 설명해 만들었습니다.
-
-- 진행자: 「30대 중반의 한국 여성 팟캐스트 진행자. 밝고 또렷한 목소리로, 호기심 많고 친근하게 질문을 던진다. 표준 서울말.」
-- 게스트: 「40대 초반의 한국 남성 IT 분석가. 차분하고 낮은 목소리로, 설명을 조리 있게 풀어낸다. 표준 서울말.」
-
-하나 만드는 데 30초 안팎이 걸렸고, 만들면서 37초짜리 미리 듣기 음성을 함께 돌려줍니다. 문서상 **프로젝트에 저장하는 방식만** 되고(1년 보관), 복제 목소리와 달리 동의 녹음은 필요 없습니다.
-
-<p><b>설계한 진행자 목소리</b> - 미리 듣기</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-designed-host-sample.mp3" style="width:100%"></audio>
-
-<p><b>설계한 게스트 목소리</b> - 미리 듣기</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-designed-guest-sample.mp3" style="width:100%"></audio>
-
-**문서와 달리 2인 대화를 한 번에 만드는 방식에도 들어갔습니다.** 문서는 설계한 목소리도 대사별로 따로 만들라고 합니다. 들어가긴 하는데 다른 목소리로 바뀌는 건 아닌지 확인하려고, 진행자 대사만 넣어 한 번에 만든 결과를 미리 듣기 음성과 비교했습니다. 유사도가 0.965로, 같은 목소리를 단독으로 합성한 결과(0.960)와 같았고 다른 목소리(0.845)와는 달랐습니다. 복제 목소리는 같은 방식에서 400 오류가 났으니 둘의 처리가 다릅니다.
-
-다만 이 대본에서는 나아진 점이 없었습니다. [목소리 일관성](#consistency) 표에서 진행자는 기본 목소리보다 더 흔들렸고 게스트는 비슷했으며, 영어 고유명사는 3회 모두 다른 단어로 읽었습니다. 문서가 흔들림 원인으로 든 긴 연기 지시문은 이 스킬이 원래 쓰지 않으므로, 문서의 주장을 반박하는 결과는 아닙니다.
-
-<p><b>3.8 Flash + Voice design 목소리</b> (위의 비교와 같은 대본, 1회차)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-podcast-38-designed-voices.mp3" style="width:100%"></audio>
-
-### 인라인 태그: 웃음과 기침은 들어갔습니다 {#inline-tags}
-
-대본 중간에 `<laugh>`, `<sigh>`, `<cough>`, `<short pause>`, `<breath>`를 넣고, 판정 모델에게 어떤 소리를 넣었는지 알려 주지 않은 채 "말이 아닌 소리가 들리면 위치에 표시하라"고 물었습니다. 판정 모델 두 개가 **같은 자리에서 같은 소리를 들은 경우만** 셌습니다.
-
-| 모델(각 2회) | 웃음 | 한숨 | 기침 | 태그를 글자로 읽음 |
-|---|---|---|---|---|
-| 3.8 Flash | 2/2 | 0/2 | 2/2 | 없음 |
-| 3.8 Flash-Lite | 2/2 | 2/2 | 2/2 | 없음 |
-| 3.1 Flash | 1/2 | 1/2 | 2/2 | 없음 |
-
-_3.8 두 모델은 한국어 목소리(`ko-kr-podcaster-8`), 3.1은 한국어 목소리를 쓸 수 없어 Charon으로 만들었다_
-
-- `<short pause>`와 `<breath>`는 판정할 수 없었습니다. 태그가 없는 대조군에서도 판정 모델이 숨소리를 들었다고 했습니다.
-- 3.8 Flash 대조군 하나는 태그가 없는데도 두 판정 모델이 웃음을 들었습니다. 태그를 넣은 자리와는 다른 곳이라 위 표의 판정은 그대로 두었습니다. 모델이 스스로 웃음을 넣었을 수 있습니다.
-- 3.1도 꺾쇠 태그를 글자로 읽지 않고 소리로 냈습니다.
-
-> 와, 정말요? `<laugh>` 그건 전혀 몰랐네요. `<sigh>` 사실 저도 어젯밤을 꼬박 새웠거든요. `<cough>` 아, 실례했습니다. `<short pause>` 그럼 다시 시작해 볼까요? `<breath>` 좋습니다.
-
-<p><b>3.8 Flash</b> - 태그 있음</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-tags-38-flash.mp3" style="width:100%"></audio>
-
-<p><b>3.8 Flash</b> - 태그 없음(대조군)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-tags-38-flash-control.mp3" style="width:100%"></audio>
-
-<p><b>3.8 Flash-Lite</b> - 태그 있음</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-tags-38-lite.mp3" style="width:100%"></audio>
-
-### style 지시: 수치로 분명히 드러났습니다 {#style}
-
-같은 문장("오늘 회의는 여기까지 하겠습니다. 다음 주에는 새로운 기능을 발표할 예정이니 많이 기대해 주세요.")을 `style` 필드만 바꿔 만들었습니다. 속삭이면 성대가 울리지 않으니 유성음 비율이 떨어지고, 느리게 말하면 길이가 늘어야 합니다.
-
-| 3.8 Flash(각 2회) | 길이 | 음량 | 유성음 비율 | 음 높이 | 판정 모델 |
-|---|---|---|---|---|---|
-| 지시 없음 | 5.8~6.1초 | -17dB | 0.67~0.79 | 127~138Hz | 보통 2/2 |
-| `whispering softly` | 8.2초 | -31~-36dB | **0.00~0.04** | - | 속삭임 2/2 |
-| `shouting with excitement` | 6.9~7.0초 | -16~-17dB | 0.62 | **207~284Hz** | 신나게 외침 2/2 |
-| `speaking very slowly and calmly` | **13.7~13.9초** | -17~-20dB | 0.62~0.68 | 114~118Hz | 느리고 차분함 2/2 |
-
-_외침은 음량이 거의 그대로인 대신 음 높이로 표현됐다_
-
-Flash-Lite도 같은 방향으로 움직였습니다(속삭임 유성음 비율 0.00~0.06, 느리게 약 2배). 다만 외침과 느리게는 판정 모델이 2회 중 1회만 그렇게 들었습니다.
-
-<p><b>지시 없음</b></p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-style-38-none.mp3" style="width:100%"></audio>
-
-<p><b>whispering softly</b></p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-style-38-whisper.mp3" style="width:100%"></audio>
-
-<p><b>shouting with excitement</b></p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-style-38-shout.mp3" style="width:100%"></audio>
-
-<p><b>speaking very slowly and calmly</b></p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-style-38-slow.mp3" style="width:100%"></audio>
-
-### 긴 글을 한 번에: 5분까지는 뭉개지지 않았습니다 {#long-form}
-
-예전 모델은 긴 대본을 한 번에 만들면 뒤로 갈수록 발음이 뭉개져서, 이 스킬은 대본을 620자씩 나눠 만듭니다. 문서는 3.8을 "긴 글에서도 흔들리지 않는" 모델로 소개합니다. 50줄, 2,309자 대본을 나누지 않고 한 번에 넣었습니다.
-
-전체를 받아써 대본과 글자 단위로 맞추고, 앞·중간·뒤 세 구간의 오류율(CER, 공백과 문장부호 제외)을 구했습니다. 판정 모델 두 개로 받아쓴 결과의 범위입니다.
-
-| 모델(각 2회) | 음성 길이 | 생성 시간 | 앞 | 중간 | 뒤 |
-|---|---|---|---|---|---|
-| 3.8 Flash | 5분 2초, 5분 11초 | **34~37초** | 2.5~3.3% | 0.9~3.4% | 0.0~2.4% |
-| 3.1 Flash | 4분 37초, 4분 42초 | 106~108초 | 0.9~2.7% | 0.4~2.5% | 0.5~2.7% |
-
-**두 모델 모두 뒷부분 오류율이 늘지 않았습니다.** 예전에 겪은 문제는 이번 5분 분량에서는 재현되지 않았습니다. 3.8은 3배 빨랐습니다. 한 편을 네 구간으로 나눈 음 높이 편차는 3.8이 진행자 6%, 게스트 4%와 16%, 3.1이 진행자 9~12%, 게스트 6~8%로, 한 번에 만들어도 흔들림이 없어지지는 않았습니다. 3.1은 새 API(Interactions)에서 화자 지정을 받지 않아 예전 방식(`generateContent`)으로 만들었습니다.
-
-### 스트리밍: 첫 소리는 1.7초 {#streaming}
-
-`stream: true`로 요청하면 첫 음성 조각이 **1.65~1.74초** 만에 도착했습니다(3회). 같은 문장의 전체 완료는 스트리밍 16.5~23.5초, 일반 요청 13.5~14.8초로 스트리밍이 오히려 느렸습니다. 팟캐스트처럼 파일로 받을 때는 일반 요청이 낫고, 음성 비서처럼 바로 말을 시작해야 할 때 쓸 기능입니다.
-
-### 측정하지 않은 것 {#not-tested}
-
-130개 언어 지원, μ-law·A-law 같은 출력 형식, Batch·Flex 요금제는 이 글에서 시험하지 않았습니다.
 
 ## 그래서 무엇을 쓸까 {#choose}
 
 - **보통 팟캐스트라면 3.8 Flash**를 씁니다. 가격이 절반 이하이고 품질 차이는 구별되지 않았습니다. 스킬 기본값도 이것으로 바꿨습니다. 대본의 영어 고유명사는 한글로 적습니다.
-- **한국어 대본이면 한국어 목소리**(`ko-kr-podcaster-*` 등)를 시험해 볼 만합니다. 기본 목소리 Leda와 Charon은 미국 영어 목소리입니다. 이번에 쓴 두 목소리는 청크 간 흔들림이 줄었지만, 다시 만들 때의 차이는 커졌습니다. 3.1에서는 쓸 수 없습니다.
+- **한국어 대본이면 한국어 목소리**(`ko-kr-podcaster-*` 등)를 시험해 볼 만합니다. 기본 목소리 Leda와 Charon은 미국 영어 목소리입니다([3편](/2026/09/27/gemini-3-8-tts-features-tested.html#korean-voices)).
 - **많이, 싸게 만들 거라면 3.8 Flash-Lite**입니다. 3.8 Flash보다 33% 싸고 40초 분량 기준 2~4초 빠르며, 이번에는 PostgreSQL도 3회 모두 알아듣게 읽었습니다. API가 같아서 모델 이름만 바꾸면 됩니다.
 - **청크 사이 목소리가 흔들리는 게 가장 거슬린다면 2.5 Pro**입니다. 가장 비싸고(3.1과 같은 $20) 무료 등급이 없으며 문서상 이전 모델이지만, 이번 측정에서 가장 안정적이었습니다.
-- **내 목소리로 만들고 싶다면 3.8 Flash로 복제를 만들고** Flash 또는 Flash-Lite로 읽습니다. 원본과 동의 문장은 같은 마이크로 녹음하고, 대화는 대사별로 따로 만들어야 합니다.
+- **내 목소리로 만들고 싶다면 3.8 Flash로 복제를 만들고** Flash 또는 Flash-Lite로 읽습니다([2편](/2026/09/27/gemini-tts-voice-replication.html)).
 
 ## 읽을 때 감안할 점 {#caveats}
 
 - **표본이 작습니다.** 품질은 40초 샘플을 모델당 2~3개, 고유명사는 2~3회, 일관성은 3회 만들어 본 결과입니다.
-- **판정을 모델에게 맡겼습니다.** 사람이 들은 결과가 아니고, 판정 모델도 틀립니다. 받아쓰기는 두 판정 모델로 따로 받아, 「알아볼 수 있는가, 다른 단어인가」에서 둘이 일치한 것만 결론으로 썼습니다. 화자 유사도도 임베딩 모델 하나로 측정한 값입니다.
+- **판정을 모델에게 맡겼습니다.** 사람이 들은 결과가 아니고, 판정 모델도 틀립니다. 받아쓰기는 두 판정 모델로 따로 받아, 「알아볼 수 있는가, 다른 단어인가」에서 둘이 일치한 것만 결론으로 썼습니다.
 - **대본이 하나의 주제입니다.** 기술 용어가 많은 한국어 대화 한 종류로만 비교했습니다.
-- **기능 시험도 표본이 작습니다.** 인라인 태그와 style은 모델당 2회, 긴 글은 2회, 한국어·설계 목소리 일관성은 3회입니다. 130개 언어와 출력 형식은 시험하지 않았습니다.
 
 ## 참고 자료 {#references}
 
 - [Gemini API - Speech generation (text-to-speech)](https://ai.google.dev/gemini-api/docs/speech-generation)
-- [Gemini API - Voice replication](https://ai.google.dev/gemini-api/docs/voice-replication)
-- [Gemini API - Voice design](https://ai.google.dev/gemini-api/docs/voice-design)
 - [Gemini API - Pricing](https://ai.google.dev/gemini-api/docs/pricing)
 - [Gemini 3.8 Flash TTS 모델 페이지](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash-tts)
 - [Gemini 3.8 Flash-Lite TTS 모델 페이지](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash-lite-tts)
