@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Gemini TTS 네 가지로 같은 팟캐스트를 만들어 봤습니다 - 2.5 Pro, 3.1 Flash, 3.8 Flash, 3.8 Flash-Lite"
+title: "Gemini TTS 네 가지로 같은 팟캐스트를 만들어 봤습니다 - 3.8 Flash, 3.8 Flash-Lite, 3.1 Flash, 2.5 Pro"
 date: 2026-09-27
 tags: ["TTS", "Gemini", "gemini-3.8-flash-tts", "음성 합성", "팟캐스트"]
 image:
@@ -17,17 +17,17 @@ image:
 
 ## 결론부터 {#tldr}
 
-| | 2.5 Pro | 3.1 Flash | **3.8 Flash** | 3.8 Flash-Lite |
+| | **3.8 Flash** | 3.8 Flash-Lite | 3.1 Flash | 2.5 Pro |
 |---|---|---|---|---|
-| 모델 | `gemini-2.5-pro-preview-tts` | `gemini-3.1-flash-tts-preview` | `gemini-3.8-flash-tts` | `gemini-3.8-flash-lite-tts` |
-| 문서상 상태 | 이전 모델 | 이전 모델 | 현재 | 현재 |
-| 출력 단가(1M 토큰) | $20 | $20 | **$9** → 2027년 $18 | $6 → 2027년 $12 |
-| 짧은 샘플 품질(10점) | - | 8/9/10/8 | 8/9/10/8~9 | 7~8/9/10/8 |
-| 두 번째 "PostgreSQL" | - | 2회 중 0회 다른 단어 | **3회 중 2회 다른 단어** | 3회 중 0회 |
-| 청크 간 음 높이 편차(진행자/게스트) | **6% / 7%** | 12% / 15% | 8% / 16% | 6% / 13% |
-| 목소리 복제([2편](/2026/09/27/gemini-tts-voice-replication.html)) | 안 됨 | 문서상 안 됨, 실제로는 읽음 | 만들기·읽기 | 읽기만(만들기는 거절) |
+| 상태 | 현재 | 현재 | 이전 | 이전 |
+| 출력 단가(1M 토큰) | **$9** (2027년 $18) | $6 (2027년 $12) | $20 | $20 |
+| 품질(10점) | 8/9/10/8~9 | 7~8/9/10/8 | 8/9/10/8 | - |
+| PostgreSQL 오독 | **2/3** | 0/3 | 0/2 | - |
+| 청크 간 편차 | 8% / 16% | 6% / 13% | 12% / 15% | **6% / 7%** |
+| 목소리 복제([2편](/2026/09/27/gemini-tts-voice-replication.html)) | 만들기·읽기 | 읽기만 | 읽기만(문서상 미지원) | 안 됨 |
+{: .compact}
 
-_품질 점수는 자연스러움/발음 명료도/화자 구분/대화 호흡 순서다. 음 높이 편차는 한 편 안에서 청크끼리 벌어진 정도를 세 번 만들어 평균 냈다_
+_모델 ID는 `gemini-3.8-flash-tts`, `gemini-3.8-flash-lite-tts`, `gemini-3.1-flash-tts-preview`, `gemini-2.5-pro-preview-tts`다. 품질은 자연스러움/발음 명료도/화자 구분/대화 호흡, PostgreSQL 오독은 다른 단어로 읽은 횟수, 청크 간 편차는 진행자/게스트의 음 높이가 청크끼리 벌어진 정도(3회 평균)다_
 
 - **가격이 가장 크게 달라졌습니다.** 3.8 Flash는 3.1보다 출력 단가가 55% 싸고, 2026년이 끝나 두 배로 올라도 조금 쌉니다.
 - **API가 호환되지 않게 바뀌었습니다.** 모델 이름만 바꾸면 400 오류가 나고, 기본 출력이 WAV로 바뀌어 예전 코드로 이어 붙이면 청크마다 "딱" 소리가 납니다.
@@ -40,17 +40,17 @@ _품질 점수는 자연스러움/발음 명료도/화자 구분/대화 호흡 �
 
 골라서 싣지 않으려고 **세 번 만든 것 중 모든 모델의 첫 번째 결과물**을 그대로 올렸습니다. 3.1 Flash는 공교롭게 첫 번째가 세 번 중 청크 간 편차가 가장 컸던 회차입니다.
 
-<p><b>2.5 Pro</b> (2분 46초)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-podcast-25-pro.mp3" style="width:100%"></audio>
-
-<p><b>3.1 Flash</b> (3분 9초)</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-podcast-31-flash.mp3" style="width:100%"></audio>
-
 <p><b>3.8 Flash</b> (3분 10초)</p>
 <audio controls preload="none" src="/assets/audio/2026-09-27-podcast-38-flash.mp3" style="width:100%"></audio>
 
 <p><b>3.8 Flash-Lite</b> (2분 58초)</p>
 <audio controls preload="none" src="/assets/audio/2026-09-27-podcast-38-lite.mp3" style="width:100%"></audio>
+
+<p><b>3.1 Flash</b> (3분 9초)</p>
+<audio controls preload="none" src="/assets/audio/2026-09-27-podcast-31-flash.mp3" style="width:100%"></audio>
+
+<p><b>2.5 Pro</b> (2분 46초)</p>
+<audio controls preload="none" src="/assets/audio/2026-09-27-podcast-25-pro.mp3" style="width:100%"></audio>
 
 청크가 바뀌는 자리는 모델마다 몇 초씩 다르지만 대략 45초, 1분 25초, 2분 무렵입니다. 3.1 Flash는 두 번째 청크(49초~1분 31초)에서 두 사람 목소리가 모두 높아집니다. 이 청크의 음 높이 중앙값이 진행자 268Hz, 게스트 139Hz로, 다른 청크 평균보다 각각 약 40Hz, 25Hz 높았습니다.
 
@@ -98,10 +98,11 @@ _품질 점수는 자연스러움/발음 명료도/화자 구분/대화 호흡 �
 
 | 비교 | 대본 | 횟수 | 판정 |
 |---|---|---|---|
-| 품질 | 6줄, 약 40초 | 3.1 2회, 3.8 3회, Lite 3회 | 모델을 가리고 `gemini-3.5-flash`로 채점 |
+| 품질 | 6줄, 약 40초 | 3.8 3회, Lite 3회, 3.1 2회 | 모델을 가리고 `gemini-3.5-flash`로 채점 |
 | 영어 고유명사 | 15줄, 약 1분 30초 | 모델별 2~3회 | `gemini-3.5-flash`·`gemini-3.7-flash` 두 모델로 받아쓰기 |
 | 숫자와 퍼센트 | 5줄, 약 17초 | 모델별 3회 | 같은 두 모델로 받아쓰기 |
 | 목소리 일관성 | 32줄, 약 3분 | 모델별 3회 | 청크별 음 높이 측정 |
+{: .compact}
 
 듣고 판정하는 일은 사람 대신 Gemini 음성 인식 모델에 맡겼습니다. 판정 모델도 잘못 들을 수 있어서 받아쓰기는 두 모델로 따로 받았습니다. 들린 음절까지 똑같지는 않은 경우가 있었지만, 결론으로 쓴 **「원래 단어로 알아볼 수 있는가, 다른 단어인가」에서는 두 모델이 모두 일치**했습니다. 갈린 칸은 표에 함께 적었습니다.
 
@@ -117,12 +118,13 @@ for each text part in the contents.
 
 3.8은 호출 방식이 통째로 달라졌습니다.
 
-| | 3.1 이전 | 3.8 |
+| | 3.8 | 3.1 이전 |
 |---|---|---|
-| 엔드포인트 | `models/{model}:generateContent` | `/v1beta/interactions` |
-| 화자 지정 | 대본 텍스트에 `진행자:`를 붙인다 | 대사마다 `speech_metadata.speaker` 필수 |
-| 입력 텍스트 | 안내문, 연기 지시를 섞어도 된다 | **적힌 글자를 그대로 읽는다.** 톤은 `style` 필드로 |
-| 기본 출력 | 헤더 없는 raw PCM(`audio/l16`) | **WAV(44바이트 RIFF 헤더 포함)** |
+| 엔드포인트 | `/v1beta/interactions` | `models/{model}:generateContent` |
+| 화자 지정 | 대사마다 `speech_metadata.speaker` 필수 | 대본 텍스트에 `진행자:`를 붙인다 |
+| 입력 텍스트 | **적힌 글자를 그대로 읽는다.** 톤은 `style` 필드로 | 안내문, 연기 지시를 섞어도 된다 |
+| 기본 출력 | **WAV(44바이트 RIFF 헤더 포함)** | 헤더 없는 raw PCM(`audio/l16`) |
+{: .compact}
 
 <details markdown="1" style="margin-bottom:1.25rem">
 <summary>문서 원문: Migration guide (스크린샷)</summary>
@@ -173,11 +175,11 @@ _같은 문서의 Limitations 절. 둘째 항목에 44바이트 헤더 이야기
 ![Gemini 3.8 Flash TTS 가격표. 입력 텍스트 1M 토큰당 0.50달러, 출력 오디오 9.00달러(2026년 12월 31일까지), 2027년 1월 1일부터 각각 1.00달러와 18.00달러](/assets/images/2026-09-27-gemini-tts-pricing-flash.png)
 _Gemini API 가격 페이지의 Gemini 3.8 Flash TTS 항목(2026-09-27 캡처). 할인 기간이 2026년 12월 31일까지로 적혀 있다_
 
-![Gemini 3.1 Flash TTS Preview 가격표. 입력 1.00달러, 출력 20.00달러](/assets/images/2026-09-27-gemini-tts-pricing-31.png)
-_같은 페이지의 3.1 Flash TTS Preview 항목. 무료 등급은 "Used to improve our products"가 Yes다_
-
 ![Gemini 3.8 Flash-Lite TTS 가격표. 입력 0.50달러, 출력 6.00달러(2026년 12월 31일까지), 2027년부터 1.00달러와 12.00달러](/assets/images/2026-09-27-gemini-tts-pricing-lite.png)
 _같은 페이지의 3.8 Flash-Lite TTS 항목_
+
+![Gemini 3.1 Flash TTS Preview 가격표. 입력 1.00달러, 출력 20.00달러](/assets/images/2026-09-27-gemini-tts-pricing-31.png)
+_같은 페이지의 3.1 Flash TTS Preview 항목. 무료 등급은 "Used to improve our products"가 Yes다_
 
 </details>
 
@@ -187,19 +189,30 @@ Flash-Lite는 출력 $6(2027년부터 $12)이고, 2.5 Pro는 3.1과 같은 $20�
 
 | 모델 | 음성 길이 | 출력 토큰(usage) | 초당 |
 |---|---|---|---|
-| 3.1 Flash | 43.2초 | 1,383 | 32.0 |
 | 3.8 Flash | 40.1초 | 1,284 | 32.0 |
 | 3.8 Flash-Lite | 40.6초 | 1,298 | 32.0 |
+| 3.1 Flash | 43.2초 | 1,383 | 32.0 |
+{: .compact}
 
 실제 청구가 어느 쪽을 따르는지는 확인하지 못했습니다. 두 기준으로 모두 환산하면 이렇습니다.
 
-| 모델 | 1분(실측 32토큰/초) | 1분(문서 25토큰/초) | 22분 팟캐스트(실측 기준) |
+<link rel="stylesheet" href="/assets/css/gemini-tts-charts.css?v=2">
+<script src="/assets/js/gemini-tts-charts.js?v=4" defer></script>
+<div class="gviz" data-viz="cost"></div>
+
+<details markdown="1" style="margin-bottom:1.25rem">
+<summary>표로 보기: 1분당 비용(문서 기준 25토큰/초 환산 포함)</summary>
+
+| 모델 | 1분(실측 32토큰/초) | 1분(문서 25토큰/초) | 22분 팟캐스트(실측) |
 |---|---|---|---|
+| **3.8 Flash** | **$0.017** (2027년 $0.035) | $0.014 ($0.027) | **$0.38** ($0.76) |
+| 3.8 Flash-Lite | $0.012 (2027년 $0.023) | $0.009 ($0.018) | $0.25 ($0.51) |
 | 3.1 Flash, 2.5 Pro* | $0.038 | $0.030 | $0.84 |
-| **3.8 Flash** | **$0.017** → 2027년 $0.035 | $0.014 → $0.027 | **$0.38** → $0.76 |
-| 3.8 Flash-Lite | $0.012 → 2027년 $0.023 | $0.009 → $0.018 | $0.25 → $0.51 |
+{: .compact}
 
 _* 2.5 Pro는 usage를 따로 측정하지 않아 단가가 같은 3.1 수치를 옮겨 적었다_
+
+</details>
 
 이번 비교에 만든 음성은 모두 합쳐 1시간 남짓입니다. 가장 비싼 단가($20)로 계산해도 3달러가 안 됩니다.
 
@@ -209,9 +222,10 @@ _* 2.5 Pro는 usage를 따로 측정하지 않아 단가가 같은 3.1 수치를
 
 | 모델 | 점수 | 생성 시간 |
 |---|---|---|
-| 3.1 Flash ×2 | 8/9/10/8, 8/9/10/8 | 18.6~19.2초 |
 | 3.8 Flash ×3 | 8/9/10/9, 8/9/10/8, 8/9/10/8 | 17.8~19.3초 |
 | 3.8 Flash-Lite ×3 | 7/9/10/8, 8/9/10/8, 8/9/10/8 | 15.1~15.6초 |
+| 3.1 Flash ×2 | 8/9/10/8, 8/9/10/8 | 18.6~19.2초 |
+{: .compact}
 
 점수는 거의 같습니다. 3.8 샘플 중 하나는 대본의 톤 지시를 `style`로 넣은 것인데, 점수가 달라지지 않았습니다. Lite는 2~4초 빠르고, 한 번은 자연스러움 7점을 받았습니다.
 
@@ -229,12 +243,20 @@ _speech-generation 문서의 Supported models 절과 When to use which model 절
 
 15줄 대본에 "PostgreSQL"이 두 번 나옵니다. 첫 번째 "빠른 방식일수록 PostgreSQL 같은"은 모든 모델이 매번 알아들을 수 있게 읽었습니다. 두 번째 "조각으로 잘라도 PostgreSQL은"에서 갈렸습니다.
 
+<div class="gviz" data-viz="pg"></div>
+
+<details markdown="1" style="margin-bottom:1.25rem">
+<summary>표로 보기: 판정 모델이 들은 음절</summary>
+
 | 모델 | 두 번째 PostgreSQL을 판정 모델 두 개가 들은 것 |
 |---|---|
-| 3.1 Flash ×2 | 포스트그레스 · 포스트그레스엘(1회차, 판정 모델끼리 갈림), 포스트그레스 |
 | **3.8 Flash ×3** | **포스트지피티**, **포스트클라우드**, 포스트그레스 |
-| 3.8 Flash-Lite ×3 | 포스트그레스, 포스트그레스, 포스트그레스큐엘 · 포스트그레스그(3회차, 갈림) |
 | 3.8 Flash + 대본에 `포스트그레스큐엘`로 적음 ×3 | 포스트그레스큐엘 3회 |
+| 3.8 Flash-Lite ×3 | 포스트그레스, 포스트그레스, 포스트그레스큐엘 · 포스트그레스그(3회차, 갈림) |
+| 3.1 Flash ×2 | 포스트그레스 · 포스트그레스엘(1회차, 판정 모델끼리 갈림), 포스트그레스 |
+{: .compact}
+
+</details>
 
 3.8 Flash는 3회 중 2회 **아예 다른 단어**로 읽었습니다. 판정 모델 두 개의 결과가 같았고, 확신도는 모두 "상"이었습니다. 해당 부분만 잘라 두었습니다.
 
@@ -244,16 +266,16 @@ _speech-generation 문서의 Supported models 절과 When to use which model 절
 <p><b>3.8 Flash, 2회차</b> - 「포스트클라우드」 또는 「포스트클라운」으로 들린다</p>
 <audio controls preload="none" src="/assets/audio/2026-09-27-pg-38-flash-b.mp3" style="width:100%"></audio>
 
-<p><b>3.1 Flash</b> - 「포스트그레스엘」</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-pg-31-flash.mp3" style="width:100%"></audio>
+<p><b>3.8 Flash, 대본에 한글로 적었을 때</b> - 「포스트그레스큐엘」</p>
+<audio controls preload="none" src="/assets/audio/2026-09-27-pg-38-flash-hangul.mp3" style="width:100%"></audio>
 
 <p><b>3.8 Flash-Lite</b> - 「포스트그레스」</p>
 <audio controls preload="none" src="/assets/audio/2026-09-27-pg-38-lite.mp3" style="width:100%"></audio>
 
-<p><b>3.8 Flash, 대본에 한글로 적었을 때</b> - 「포스트그레스큐엘」</p>
-<audio controls preload="none" src="/assets/audio/2026-09-27-pg-38-flash-hangul.mp3" style="width:100%"></audio>
+<p><b>3.1 Flash</b> - 「포스트그레스엘」</p>
+<audio controls preload="none" src="/assets/audio/2026-09-27-pg-31-flash.mp3" style="width:100%"></audio>
 
-목소리를 한국어 목소리나 Voice design 목소리로 바꿔도 사라지지 않았습니다([3편](/2026/09/27/gemini-3-8-tts-features-tested.html#korean-voices)). 같은 대본 안에서도 한 번은 맞고 한 번은 틀렸으니, 한 번 맞았다고 안심할 수 없습니다. **대본에 영어 고유명사를 쓰지 않고 한글 발음으로 적는 것**이 가장 확실합니다. 위의 비교용 팟캐스트 대본도 그렇게 썼습니다.
+같은 대본 안에서도 한 번은 맞고 한 번은 틀렸으니, 한 번 맞았다고 안심할 수 없습니다. **대본에 영어 고유명사를 쓰지 않고 한글 발음으로 적는 것**이 가장 확실합니다. 위의 비교용 팟캐스트 대본도 그렇게 썼습니다.
 
 ## 숫자와 퍼센트는 문제없었습니다 {#numbers}
 
@@ -267,14 +289,22 @@ _speech-generation 문서의 Supported models 절과 When to use which model 절
 
 32줄 대본을 청크 네 개로 나눠 모델마다 세 번씩 만들고, 청크마다 **화자별 음 높이(F0) 중앙값**을 구했습니다. 진행자는 여성, 게스트는 남성 목소리라 160Hz를 기준으로 두 사람을 갈랐습니다. 한 편 안에서 가장 높은 청크와 가장 낮은 청크가 몇 % 벌어지는지를 봤습니다. 10%는 약 1.7반음, 20%는 약 3.2반음입니다.
 
-| 모델 | 청크끼리: 진행자 평균(최악) | 청크끼리: 게스트 평균(최악) | 다시 만들 때: 진행자 | 다시 만들 때: 게스트 |
-|---|---|---|---|---|
-| **2.5 Pro** | **6.1%** (9.8%) | **6.7%** (8.2%) | 4.1% | 2.5% |
-| 3.1 Flash | 11.8% (20.1%) | 14.9% (25.3%) | 4.2% | 1.1% |
-| 3.8 Flash | 8.2% (11.5%) | 15.6% (22.6%) | 2.4% | 1.2% |
-| 3.8 Flash-Lite | 5.9% (8.1%) | 12.6% (22.5%) | 4.2% | 6.4% |
+<div class="gviz" data-viz="consistency"></div>
 
-_모델별 3회, 회차마다 청크 4개. 같은 대본을 같은 경계로 나눴으므로 청크 내용은 모델끼리 같다. 「다시 만들 때」는 세 회차의 편 평균 음 높이가 서로 벌어진 정도다_
+<details markdown="1" style="margin-bottom:1.25rem">
+<summary>표로 보기: 최악값과 다시 만들 때 차이 포함</summary>
+
+| 모델 | 청크끼리 평균 | 청크끼리 최악 | 다시 만들 때 |
+|---|---|---|---|
+| 3.8 Flash | 8.2% / 15.6% | 11.5% / 22.6% | 2.4% / 1.2% |
+| 3.8 Flash-Lite | 5.9% / 12.6% | 8.1% / 22.5% | 4.2% / 6.4% |
+| 3.1 Flash | 11.8% / 14.9% | 20.1% / 25.3% | 4.2% / 1.1% |
+| **2.5 Pro** | **6.1% / 6.7%** | **9.8% / 8.2%** | 4.1% / 2.5% |
+{: .compact}
+
+_각 칸은 진행자 / 게스트다. 모델별 3회, 회차마다 청크 4개이고, 같은 대본을 같은 경계로 나눴으므로 청크 내용은 모델끼리 같다. 「다시 만들 때」는 세 회차의 편 평균 음 높이가 서로 벌어진 정도다_
+
+</details>
 
 - **가장 안정적인 건 가장 오래된 2.5 Pro입니다.** 두 사람 모두 10%를 넘은 적이 없습니다.
 - **3.8 Flash는 진행자가 3.1보다 안정됐습니다**(평균 11.8% → 8.2%, 최악 20% → 11.5%).
