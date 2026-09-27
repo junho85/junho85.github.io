@@ -10,6 +10,10 @@ author:
   email: junho85@gmail.com
 
 timezone: Asia/Seoul
+
+# 글 목차(TOC) 전체 스위치. 테마는 이것과 글별 toc(defaults 에서 true)가 둘 다 켜져야 목차를 그린다
+toc: true
+
 lang: ko-KR
 
 github:
