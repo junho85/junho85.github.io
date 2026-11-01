@@ -27,9 +27,7 @@ permalink: /
 
 ## 만든 페이지
 
-- [한 문장, 내 영어로 · 암기 카드](/english-flashcards/) — 출퇴근길 영어 플래시카드
-- [Kakao Mini Toastmasters — Table Topics](/toastmasters/)
-- [클리프턴 스트렝스 가이드](/strength-finder/) — 34가지 재능 테마
+- [June Kim's Web Apps](https://apps.junho85.pe.kr/) — 일상을 편리하게 만드는 웹 앱 모음. AI 도구, 유틸리티, 계산기, 게임
 - [와우정사 가성비 맛집](/wawoojeongsa-food/)
 - [용인의 캐나다, 명수당](/yongin-canada/)
 - [슈퍼마리오 미니 플랫포머](/deepseek-v41-flash-mario/) — DeepSeek V4.1 Flash 테스트
