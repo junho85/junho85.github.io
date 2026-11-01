@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title | escape }} | 기술노트로 옮겼습니다</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="{{ page.target }}">
+<meta http-equiv="refresh" content="0; url={{ page.target }}">
+<script>location.replace({{ page.target | jsonify }} + location.hash);</script>
+<style>body{font-family:system-ui,"Apple SD Gothic Neo",sans-serif;max-width:40rem;margin:4rem auto;padding:0 16px;line-height:1.6;color:#222;background:#fff}a{color:#2f5f8a}@media (prefers-color-scheme:dark){body{color:#ddd;background:#1b1b1e}a{color:#8ab4f8}}</style>
+</head>
+<body>
+<p>기술 블로그가 <a href="https://dev.junho85.pe.kr/">기술노트(dev.junho85.pe.kr)</a>로 옮겼습니다. 자동으로 이동하지 않으면 아래 링크를 누르세요.</p>
+<p><a href="{{ page.target }}">{{ page.title | escape }}</a></p>
+<p><a href="{{ '/' | relative_url }}">준킴월드로 가기</a></p>
+</body>
+</html>
